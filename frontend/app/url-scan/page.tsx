@@ -1,66 +1,42 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import ExplainabilityCard from "@/components/ExplainabilityCard";
 import DashboardNav from "@/components/DashboardNav";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { useTheme } from "@/lib/ThemeContext";
-
-interface ThreatResult {
-  threatType: string;
-  riskLevel: "None" | "Low" | "Medium" | "High" | "Critical";
-  confidence: number;
-  explanations: string[];
-  recommendation: string;
-}
+import { analyzeUrl, ThreatResult } from "@/lib/api";
 
 export default function UrlScanner() {
   const [url, setUrl] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState<ThreatResult | null>(null);
-  const [sessionId, setSessionId] = useState("");
   const { theme, toggleTheme, themeStyle } = useTheme();
   const { t } = useLanguage();
 
-  useEffect(() => {
-    // Generate a fake session ID on load
-    setSessionId(`NET-${Math.random().toString(36).substring(2, 8).toUpperCase()}`);
-  }, []);
-
-  const handleScan = async (scenario: "threat" | "safe" = "threat") => {
+  const handleScan = async () => {
     if (!url.trim()) return;
     
     setIsAnalyzing(true);
     setResult(null);
 
-    // Simulate AI API Call
-    setTimeout(() => {
-      if (scenario === "threat") {
-        setResult({
-          threatType: "Malicious Typosquatting Domain",
-          riskLevel: "High",
-          confidence: 89,
-          explanations: [
-            "Domain mismatch: 'paypa1.com' closely resembles 'paypal.com' (Typosquatting).",
-            "SSL Certificate: Certificate was issued just 2 days ago by an untrusted authority.",
-            "Hidden redirects: The URL contains obfuscated Javascript that triggers a background download."
-          ],
-          recommendation: "Block domain at the firewall level. Add to internal DNS sinkhole. Do not proceed to the site."
-        });
-      } else {
-        setResult({
-          threatType: "Verified Corporate Domain",
-          riskLevel: "None",
-          confidence: 99,
-          explanations: [
-            "SSL Certificate is valid and issued by a trusted CA.",
-            "Domain age is > 10 years with a positive reputation score."
-          ],
-          recommendation: "No action required. Domain is safe to access."
-        });
-      }
+    try {
+      const res = await analyzeUrl(url);
+      setResult(res);
+    } catch (error: unknown) {
+      console.error(error);
+      setResult({
+        threatType: "Analysis Error",
+        riskLevel: "None",
+        confidence: 0,
+        explanations: [
+          error instanceof Error ? error.message : "Failed to connect to the backend",
+        ],
+        recommendation: "Please try again later.",
+      });
+    } finally {
       setIsAnalyzing(false);
-    }, 2000);
+    }
   };
 
   const clearInput = () => {
@@ -77,7 +53,7 @@ export default function UrlScanner() {
       parsedProtocol = parsedUrl.protocol.replace(":", "").toUpperCase();
       domainLength = parsedUrl.hostname.length;
     }
-  } catch (e) {
+  } catch {
     parsedProtocol = "INVALID";
   }
 

@@ -6,16 +6,42 @@ import numpy as np
 import io
 from pydub import AudioSegment
 from .load_audio_model import processor, model, classifier, DEVICE
+
 TARGET_SR = 16000
+
 def predict_audio(audio_path: str) -> dict:
-    if audio_path.lower().endswith(".mp3"):
-        audio_seg  = AudioSegment.from_mp3(audio_path)
-        wav_buffer = io.BytesIO()
-        audio_seg.export(wav_buffer, format="wav")
-        wav_buffer.seek(0)
-        audio, sr  = sf.read(wav_buffer)
-    else:
-        audio, sr  = sf.read(audio_path)
+    audio = None
+    sr = None
+
+    # 1) Try torchaudio (can handle many codecs, may decode mp3 without ffmpeg)
+    try:
+        waveform, sr = torchaudio.load(audio_path)
+        # torchaudio returns [channels, time]
+        audio = waveform.mean(dim=0).numpy() if waveform.ndim > 1 else waveform.squeeze(0).numpy()
+    except Exception:
+        pass
+
+    # 2) Try soundfile (great for wav/flac)
+    if audio is None:
+        try:
+            audio, sr = sf.read(audio_path)
+        except Exception:
+            pass
+
+    # 3) Try pydub (requires ffmpeg for mp3)
+    if audio is None:
+        try:
+            audio_seg  = AudioSegment.from_file(audio_path)
+            wav_buffer = io.BytesIO()
+            audio_seg.export(wav_buffer, format="wav")
+            wav_buffer.seek(0)
+            audio, sr  = sf.read(wav_buffer)
+        except Exception as e:
+            raise ValueError(
+                "Could not decode audio file. "
+                "If uploading MP3, ensure ffmpeg is installed, or upload WAV instead. "
+                f"Details: {e}"
+            ) from e
     if audio.ndim > 1:
         audio = audio.mean(axis=1)
     audio_tensor = torch.tensor(audio).float()

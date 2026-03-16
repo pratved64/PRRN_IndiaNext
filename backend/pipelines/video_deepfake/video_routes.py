@@ -90,11 +90,14 @@ def _run_image_pipeline(image_bytes: bytes, model, processor) -> dict:
 @router.post("/media", response_model=MediaResponse)
 async def analyze_media_endpoint(
     request: Request,
-    file: UploadFile = File(..., description="Image or video file to analyze"),
+    file: UploadFile | None = File(None, description="Image or video file to analyze"),
 ):
     """
     Step 5.1–5.4: Accept media upload, check MIME type, route to image/video processor, return JSON.
     """
+    if file is None:
+        raise HTTPException(status_code=400, detail="No file uploaded. Please attach an image or video in 'file' field.")
+
     model = request.app.state.vit_model
     processor = request.app.state.vit_processor
 

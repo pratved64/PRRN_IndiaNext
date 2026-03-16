@@ -5,22 +5,14 @@ import ExplainabilityCard from "@/components/ExplainabilityCard";
 import DashboardNav from "@/components/DashboardNav";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { useTheme } from "@/lib/ThemeContext";
-
-interface ThreatResult {
-  threatType: string;
-  riskLevel: "None" | "Low" | "Medium" | "High" | "Critical";
-  confidence: number;
-  explanations: string[];
-  recommendation: string;
-  timelineMarkers?: { time: number; label: string }[];
-}
+import { processDeepfakeMedia, ThreatResult } from "@/lib/api";
 
 export default function DeepfakeScanner() {
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState<ThreatResult | null>(null);
-  const [sessionId, setSessionId] = useState("");
+  const [sessionId] = useState(() => `MED-${Math.random().toString(36).substring(2, 8).toUpperCase()}`);
   const { theme, toggleTheme, themeStyle } = useTheme();
   const { t } = useLanguage();
 
@@ -127,9 +119,6 @@ export default function DeepfakeScanner() {
   };
 
   useEffect(() => {
-    // Generate a fake session ID on load
-    setSessionId(`MED-${Math.random().toString(36).substring(2, 8).toUpperCase()}`);
-    
     // Cleanup object URL on unmount to prevent memory leaks
     return () => {
       if (previewUrl) URL.revokeObjectURL(previewUrl);
@@ -148,72 +137,36 @@ export default function DeepfakeScanner() {
     }
   };
 
-  const handleAnalyze = (scenario: "threat" | "safe" = "threat") => {
+  const handleAnalyze = async (scenario: "threat" | "safe" = "threat") => {
     if (!file) return;
     setIsAnalyzing(true);
     setResult(null);
 
-    const fileType = file.type.split('/')[0]; // 'image', 'video', or 'audio'
-
-    setTimeout(() => {
-      let mockResult: ThreatResult;
-
-      if (scenario === "threat") {
-        mockResult = {
-          threatType: "AI-Generated Media (Deepfake)",
-          riskLevel: "Critical",
-          confidence: 96,
-          explanations: [],
-          recommendation: "Flag this media as synthetic. Quarantine and verify sender identity through secondary channels (e.g., live phone call)."
-        };
-
-        if (fileType === 'video') {
-          mockResult.explanations = [
-            "Facial artifacts detected: Unnatural blurring around the jawline and eyes.",
-            "Lip-sync mismatch: Audio phonemes do not align perfectly with mouth movements at 0:12s.",
-            "Lighting inconsistency: Shadows on the subject's face do not match the background environment."
-          ];
-          mockResult.timelineMarkers = [
-            { time: 2.5, label: "Jawline blur" },
-            { time: 6.1, label: "Shadow mismatch" },
-            { time: 12.0, label: "Lip-sync fail" }
-          ];
-        } else if (fileType === 'audio') {
-          mockResult.explanations = [
-            "Spectral anomalies: Unnatural frequency cutoffs typical of AI voice cloning models (e.g., ElevenLabs).",
-            "Breathing patterns: Absence of natural inhalation sounds between sentences.",
-            "Monotone pitch variations: Emotional cadence lacks human-like micro-fluctuations."
-          ];
-          mockResult.timelineMarkers = [
-            { time: 3.4, label: "Missing breath" },
-            { time: 8.2, label: "Pitch anomaly" },
-            { time: 14.7, label: "Spectral cutoff" }
-          ];
-        } else {
-          mockResult.explanations = [
-            "Generative AI artifacts: Asymmetrical features detected in the background.",
-            "Metadata analysis: Missing standard EXIF data; software tag indicates 'Stable Diffusion'.",
-            "Pixel-level noise: Noise distribution is uniform and lacks natural camera sensor grain."
-          ];
-        }
+    try {
+      if (scenario === "safe") {
+        // Run proper backend request for true "Safe" evaluation
+        const trueResult = await processDeepfakeMedia(file);
+        setResult(trueResult);
       } else {
-        // Safe Scenario
-        mockResult = {
-          threatType: "Authentic Media Verified",
-          riskLevel: "None",
-          confidence: 99,
-          explanations: [
-            "Metadata intact: Standard camera/recording device signatures present.",
-            "Forensic analysis: No synthetic noise artifacts or pixel anomalies detected.",
-            "Temporal consistency: Frame-by-frame rendering is consistent with natural physics."
-          ],
-          recommendation: "Media passed all cryptographic and heuristic checks. Safe to process."
-        };
+        const trueResult = await processDeepfakeMedia(file);
+        // Note: the timeline markers were mocked previously. The backend might not support them yet.
+        // If the backend returns them, great! Otherwise, it will just show the heatmap and basic explanations.
+        setResult(trueResult);
       }
-
-      setResult(mockResult);
+    } catch (error: unknown) {
+      console.error(error);
+      setResult({
+        threatType: "Analysis Error",
+        riskLevel: "None",
+        confidence: 0,
+        explanations: [
+          error instanceof Error ? error.message : "Failed to connect to the backend",
+        ],
+        recommendation: "Please try again later.",
+      });
+    } finally {
       setIsAnalyzing(false);
-    }, 2500);
+    }
   };
 
   const clearInput = () => {

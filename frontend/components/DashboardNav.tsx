@@ -1,19 +1,15 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import LanguageSelector from "@/components/LanguageSelector";
 
 export default function DashboardNav() {
-  const [sessionId, setSessionId] = useState("");
+  const [sessionId] = useState(() => `SYS-${Math.random().toString(36).substring(2, 8).toUpperCase()}`);
   const pathname = usePathname();
   const { t } = useLanguage();
-
-  useEffect(() => {
-    setSessionId(`SYS-${Math.random().toString(36).substring(2, 8).toUpperCase()}`);
-  }, []);
 
   return (
     <div className="max-w-6xl mx-auto relative z-20 pt-8 px-4 md:px-8 lg:px-12">
