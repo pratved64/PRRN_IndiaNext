@@ -1,68 +1,86 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
+load_dotenv()
 
-# IMPORT AS REQUIRED
-# from qdrant_client import QdrantClient
-# from sqlalchemy import create_engine
-# from sqlalchemy.orm import sessionmaker
-
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
 from contextlib import asynccontextmanager
+import os
+import sys
+import time
+import logging
 
-MODEL_NAME = "cybersectony/phishing-email-detection-distilbert_v2.4.1"
+from fastapi import FastAPI, Request, Response
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Setup Phase 1: Shared State & Initialization
-    print("Loading global models and tokenizers...")
-    try:
-        app.state.tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-        model = AutoModelForSequenceClassification.from_pretrained(MODEL_NAME)
-        model.eval()
-        app.state.model = model
-        print("Models loaded successfully!")
-    except Exception as e:
-        print(f"Warning: Could not load model/tokenizer. Error: {e}")
-        app.state.tokenizer = None
-        app.state.model = None
-    
+    import sys as _sys, os as _os
+    _sys.path.insert(0, _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "sentinel_behavior"))
+    from sentinel_behavior.main import startup_sentinel
+    await startup_sentinel(app)
+    print("SENTINEL AI — all models loaded")
     yield
-    
-    # Teardown
-    app.state.tokenizer = None
-    app.state.model = None
+    print("Backend shutting down.")
 
-# Pass lifespan into the FastAPI init
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(title="PRRN IndiaNext — Unified Backend", lifespan=lifespan)
 
-# CORS Setup
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"], 
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "https://*.vercel.app",
+        "*",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Database Connections Placeholders
-# PG_URL = "postgresql://user:password@localhost:5432/hackathon_db"
-# engine = create_engine(PG_URL)
-# SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+import time as _time
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+logger = logging.getLogger("backend")
 
-# qdrant = QdrantClient(host="localhost", port=6333)
+@app.middleware("http")
+async def log_requests(request: Request, call_next) -> Response:
+    start = _time.perf_counter()
+    response = await call_next(request)
+    elapsed = (_time.perf_counter() - start) * 1000
+    logger.info("%s %s \\u2192 %d (%.1f ms)", request.method, request.url.path, response.status_code, elapsed)
+    return response
 
-# Include the Phishing Pipeline router
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error("Unhandled error on %s: %s", request.url, exc)
+    return JSONResponse(status_code=500, content={"error": type(exc).__name__, "message": str(exc), "path": str(request.url)})
+
 from pipelines.api_routes import router as phishing_router
 app.include_router(phishing_router)
 
-# Include the URL Analysis router
-from pipelines.url.url_routes import router as url_router
-app.include_router(url_router)
+from sentinel_behavior.main import router as sentinel_router
+app.include_router(sentinel_router, prefix="/api/sentinel", tags=["Sentinel"])
 
 # Include the Deepfake Audio API router
 from pipelines.deepfake_audio.api_routes import router as deepfake_audio_router
 app.include_router(deepfake_audio_router)
 
 @app.get("/api/health")
-def health_check():
-    return {"status": "ok", "message": "Backend is locked and loaded."}
+async def health_check(request: Request):
+    try:
+        from models.isolation_forest import UserIsolationForest
+        if_manager = request.app.state.if_manager
+        users_trained = len(if_manager.models)
+        sentinel_loaded = users_trained > 0
+    except Exception:
+        sentinel_loaded = False
+        users_trained = 0
+
+    return {
+        "status": "ok",
+        "message": "Backend is locked and loaded.",
+        "sentinel_models_loaded": sentinel_loaded,
+        "users_trained": users_trained,
+        "services": {
+            "phishing_pipeline": "active",
+            "behavior_detection": "active" if sentinel_loaded else "loading",
+        },
+    }
