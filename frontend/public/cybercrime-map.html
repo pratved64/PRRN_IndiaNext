@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>India Cybercrime Heatmap — SENTINEL AI</title>
+  <style>
+    :root {
+      --bg-color: #0a0f1e;
+      --panel-bg: #0f1729;
+      --cyan: #00ffff;
+      --cyan-glow: rgba(0, 255, 255, 0.2);
+      --red: #ff2d55;
+      --orange: #ff9500;
+      --green: #34c759;
+      --border: #1e2d4a;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: white;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    #header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 32px;
+      background: var(--bg-color);
+      flex-shrink: 0;
+      z-index: 10;
+    }
+
+    .header-left .title {
+      font-size: 20px;
+      font-weight: bold;
+      letter-spacing: 2px;
+      color: white;
+      margin-bottom: 4px;
+    }
+
+    .header-left .subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .header-right {
+      display: flex;
+      gap: 12px;
+    }
+
+    .stat-pill {
+      background: var(--panel-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .stat-pill .label {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+
+    .stat-pill .value {
+      font-size: 14px;
+      font-weight: bold;
+      color: white;
+    }
+
+    #map-container {
+      position: relative;
+      width: 100%;
+      height: 90vh;
+      background-color: var(--bg-color);
+      flex-grow: 1;
+      overflow: hidden;
+    }
+
+    svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .state-path {
+      stroke: var(--cyan);
+      stroke-width: 0.8px;
+      cursor: pointer;
+      opacity: 0;
+      transform: scale(0.95);
+      transition: opacity 600ms ease-out, transform 600ms ease-out;
+    }
+
+    .state-path.drawn {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .state-path.drawn.hovered {
+      stroke: #ffffff;
+      stroke-width: 2px;
+      transform: scale(1.05);
+    }
+
+    .state-label {
+      font-size: 9px;
+      fill: rgba(255, 255, 255, 0.7);
+      text-anchor: middle;
+      dominant-baseline: central;
+      pointer-events: none;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    #legend {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      background: rgba(10, 15, 30, 0.8);
+      padding: 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      backdrop-filter: blur(4px);
+    }
+
+    .legend-title {
+      color: white;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+    }
+
+    .legend-gradient {
+      width: 200px;
+      height: 12px;
+      border-radius: 6px;
+      background: linear-gradient(to right, #0d1b4b, #ff2d55);
+      border: 1px solid var(--border);
+      margin-bottom: 8px;
+    }
+
+    .legend-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .legend-labels span {
+      color: var(--text-muted);
+      font-size: 10px;
+    }
+
+    .legend-indicators {
+      display: flex;
+      gap: 12px;
+    }
+
+    .indicator {
+      font-size: 12px;
+      color: #cbd5e1;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    #tooltip {
+      position: fixed;
+      pointer-events: none;
+      background: rgba(10, 15, 30, 0.95);
+      border: 1px solid var(--cyan);
+      border-radius: 8px;
+      padding: 12px 16px;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 0 20px var(--cyan-glow);
+      min-width: 200px;
+      z-index: 100;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 150ms ease-out, transform 150ms ease-out;
+    }
+
+    #tooltip.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .tooltip-state {
+      color: white;
+      font-size: 14px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .tooltip-divider {
+      height: 1px;
+      background: var(--border);
+      margin-bottom: 8px;
+    }
+
+    .tooltip-label {
+      color: var(--cyan);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+
+    .tooltip-count {
+      color: white;
+      font-size: 24px;
+      font-weight: bold;
+      font-family: monospace;
+      margin-bottom: 4px;
+    }
+
+    .tooltip-rank {
+      font-size: 12px;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: white;
+    }
+
+    .tooltip-rank.high {
+      color: var(--red);
+    }
+
+    .tooltip-rank.medium {
+      color: var(--orange);
+    }
+
+    .tooltip-rank.low {
+      color: var(--green);
+    }
+
+    .tooltip-bar-label {
+      color: var(--text-muted);
+      font-size: 10px;
+      margin-bottom: 4px;
+    }
+
+    .tooltip-bar-bg {
+      width: 100%;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+    }
+
+    .tooltip-bar-fill {
+      height: 100%;
+      border-radius: 2px;
+    }
+
+    #detail-panel {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 100%;
+      width: 280px;
+      background: var(--panel-bg);
+      border-left: 1px solid var(--border);
+      padding: 24px;
+      z-index: 50;
+      transform: translateX(100%);
+      transition: transform 750ms cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+    }
+
+    #detail-panel.visible {
+      transform: translateX(0);
+    }
+
+    .detail-state {
+      color: white;
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+
+    .detail-abbr {
+      color: var(--cyan);
+      font-size: 12px;
+      margin-bottom: 24px;
+      font-weight: 600;
+    }
+
+    .detail-count {
+      font-size: 48px;
+      font-weight: bold;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .detail-count-label {
+      color: var(--text-muted);
+      font-size: 12px;
+      margin-bottom: 24px;
+    }
+
+    .detail-bottom-hint {
+      margin-top: auto;
+      color: #64748b;
+      font-size: 11px;
+      text-align: center;
+    }
+
+    #loading-state,
+    #error-state {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-color);
+      z-index: 20;
+    }
+
+    #loading-state.hidden,
+    #error-state.hidden {
+      display: none;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(0, 255, 255, 0.1);
+      border-top-color: var(--cyan);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 16px;
+    }
+
+    @keyframes spin {
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .loading-text,
+    .error-text {
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .retry-btn {
+      margin-top: 16px;
+      background: transparent;
+      border: 1px solid var(--cyan);
+      color: var(--cyan);
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      transition: all 0.2s;
+    }
+
+    .retry-btn:hover {
+      background: rgba(0, 255, 255, 0.1);
+    }
+  </style>
+</head>
+
+<body>
+  <div id="header">
+    <div class="header-left">
+      <div class="title">INDIA CYBERCRIME HEATMAP 2025-2026</div>
+      <div class="subtitle">State-wise cybercrime incidents — NCRB Data</div>
+    </div>
+    <div class="header-right">
+      <div class="stat-pill">
+        <span class="label">TOTAL INCIDENTS</span>
+        <span class="value">82,471</span>
+      </div>
+      <div class="stat-pill">
+        <span class="label">HIGHEST</span>
+        <span class="value">Karnataka 9,876</span>
+      </div>
+      <div class="stat-pill">
+        <span class="label">LOWEST</span>
+        <span class="value">Sikkim 89</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="map-container">
+    <div id="loading-state">
+      <div class="spinner"></div>
+      <div class="loading-text">Loading India map data...</div>
+    </div>
+
+    <div id="error-state" class="hidden">
+      <div class="error-text">Failed to load map data.<br>Please check your connection.</div>
+      <button class="retry-btn" onclick="fetchData()">Retry</button>
+    </div>
+
+    <!-- Map drawn here -->
+
+    <div id="legend">
+      <div class="legend-title">CYBERCRIME INTENSITY</div>
+      <div class="legend-gradient"></div>
+      <div class="legend-labels">
+        <span>0</span>
+        <span>5,000</span>
+        <span>10,000+</span>
+      </div>
+      <div class="legend-indicators">
+        <div class="indicator"><span style="color:var(--red)">●</span> HIGH &gt; 5,000</div>
+        <div class="indicator"><span style="color:var(--orange)">●</span> MEDIUM 2,000-5,000</div>
+        <div class="indicator"><span style="color:var(--green)">●</span> LOW &lt; 2,000</div>
+      </div>
+    </div>
+
+    <div id="detail-panel" class="hidden">
+      <div class="detail-state" id="panel-state"></div>
+      <div class="detail-abbr" id="panel-abbr"></div>
+      <div class="detail-count" id="panel-count"></div>
+      <div class="detail-count-label">incidents reported</div>
+
+      <!-- Rank Badge -->
+      <div id="panel-rank" class="tooltip-rank" style="margin-bottom: 24px;"></div>
+
+      <!-- Progress Bar -->
+      <div style="margin-bottom: 12px;">
+        <div class="tooltip-bar-label">vs National Max</div>
+        <div class="tooltip-bar-bg">
+          <div id="panel-bar-fill" class="tooltip-bar-fill"></div>
+        </div>
+      </div>
+
+      <div class="detail-bottom-hint">Click anywhere to reset</div>
+    </div>
+  </div>
+
+  <div id="tooltip" style="display:none">
+    <div class="tooltip-state" id="tt-state"></div>
+    <div class="tooltip-divider"></div>
+    <div class="tooltip-label">CYBERCRIMES REPORTED</div>
+    <div class="tooltip-count" id="tt-count"></div>
+    <div class="tooltip-rank" id="tt-rank"></div>
+    <div class="tooltip-bar-label">vs National Max</div>
+    <div class="tooltip-bar-bg">
+      <div class="tooltip-bar-fill" id="tt-bar"></div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
+
+  <script>
+    const cybercrimeData = {
+      "Andhra Pradesh": { count: 4621, rank: 8 },
+      "Arunachal Pradesh": { count: 312, rank: 28 },
+      "Assam": { count: 1893, rank: 18 },
+      "Bihar": { count: 2841, rank: 13 },
+      "Chhattisgarh": { count: 1654, rank: 20 },
+      "Goa": { count: 423, rank: 27 },
+      "Gujarat": { count: 5912, rank: 5 },
+      "Haryana": { count: 7423, rank: 3 },
+      "Himachal Pradesh": { count: 892, rank: 25 },
+      "Jammu and Kashmir": { count: 1243, rank: 22 },
+      "Jharkhand": { count: 8921, rank: 2 },
+      "Karnataka": { count: 9876, rank: 1 },
+      "Kerala": { count: 4231, rank: 10 },
+      "Madhya Pradesh": { count: 4892, rank: 7 },
+      "Maharashtra": { count: 7234, rank: 4 },
+      "Manipur": { count: 234, rank: 29 },
+      "Meghalaya": { count: 312, rank: 28 },
+      "Mizoram": { count: 156, rank: 30 },
+      "Nagaland": { count: 198, rank: 31 },
+      "Odisha": { count: 2341, rank: 15 },
+      "Punjab": { count: 3421, rank: 12 },
+      "Rajasthan": { count: 5123, rank: 6 },
+      "Sikkim": { count: 89, rank: 32 },
+      "Tamil Nadu": { count: 4521, rank: 9 },
+      "Telangana": { count: 3892, rank: 11 },
+      "Tripura": { count: 567, rank: 26 },
+      "Uttar Pradesh": { count: 5621, rank: 5 },
+      "Uttarakhand": { count: 1123, rank: 23 },
+      "West Bengal": { count: 2983, rank: 14 },
+      "Delhi": { count: 2540, rank: 16 },
+      "Dadra and Nagar Haveli": { count: 145, rank: 33 },
+      "Daman and Diu": { count: 98, rank: 34 }
+    };
+
+    const abbreviations = {
+      "Andhra Pradesh": "AP", "Arunachal Pradesh": "AR", "Assam": "AS",
+      "Bihar": "BR", "Chhattisgarh": "CG", "Goa": "GA", "Gujarat": "GJ",
+      "Haryana": "HR", "Himachal Pradesh": "HP", "Jammu and Kashmir": "JK",
+      "Jharkhand": "JH", "Karnataka": "KA", "Kerala": "KL", "Madhya Pradesh": "MP",
+      "Maharashtra": "MH", "Manipur": "MN", "Meghalaya": "ML", "Mizoram": "MZ",
+      "Nagaland": "NL", "Odisha": "OD", "Punjab": "PB", "Rajasthan": "RJ",
+      "Sikkim": "SK", "Tamil Nadu": "TN", "Telangana": "TG", "Tripura": "TR",
+      "Uttar Pradesh": "UP", "Uttarakhand": "UK",
+      "West Bengal": "WB", "Delhi": "DL"
+    };
+
+    const skipLabels = new Set([
+      "Goa", "Sikkim", "Daman and Diu", "Dadra and Nagar Haveli",
+      "Manipur", "Mizoram", "Nagaland", "Meghalaya", "Tripura"
+    ]);
+
+    const GEOJSON_URL = "https://raw.githubusercontent.com/geohacker/india/master/state/india_telangana.geojson";
+
+    const container = d3.select("#map-container");
+    const containerNode = container.node();
+    const width = containerNode.clientWidth;
+    const height = containerNode.clientHeight;
+
+    const svg = container.insert("svg", "#legend");
+    const gGrp = svg.append("g");
+    const pathsGrp = gGrp.append("g");
+    const labelsGrp = gGrp.append("g");
+
+    const projection = d3.geoMercator()
+      .center([82, 22])
+      .scale(1000)
+      .translate([width / 2, height / 2]);
+
+    const pathGen = d3.geoPath().projection(projection);
+
+    const colorScale = d3.scaleSequential()
+      .domain([0, 10000])
+      .interpolator(d3.interpolateRgb("#0d1b4b", "#ff2d55"));
+
+    const zoom = d3.zoom()
+      .scaleExtent([1, 8])
+      .on("zoom", (event) => {
+        gGrp.attr("transform", event.transform);
+      });
+
+    const tTip = d3.select("#tooltip");
+    const detailPanel = d3.select("#detail-panel");
+    let activeState = d3.select(null);
+
+    svg.on("click", resetZoom);
+
+    const getStateName = (properties) => {
+      return properties?.ST_NM
+        || properties?.NAME_1
+        || properties?.name
+        || properties?.st_nm
+        || '';
+    };
+
+    const loadGeoData = async () => {
+      const urls = [
+        'https://gist.githubusercontent.com/jbrobst/' +
+        '56c13bbbf9d97d187fea01ca62ea5112/raw/' +
+        'e388c4cae20aa53cb5090210a42ebb9b765c0a36/' +
+        'india_states.geojson',
+        'https://raw.githubusercontent.com/' +
+        'geohacker/india/master/state/' +
+        'india_telangana.geojson'
+      ];
+
+      let data = null;
+      let lastError = null;
+
+      for (const url of urls) {
+        try {
+          const res = await fetch(url);
+          if (res.ok) {
+            data = await res.json();
+            console.log(
+              'GeoJSON loaded from:', url,
+              '| Features:', data.features.length,
+              '| Sample props:',
+              data.features[0]?.properties
+            );
+            break;
+          }
+        } catch (err) {
+          lastError = err;
+          console.warn('Failed to fetch:', url);
+        }
+      }
+
+      if (!data) {
+        throw lastError || new Error('All GeoJSON URLs failed');
+      }
+
+      projection.fitExtent(
+        [[40, 40], [width - 40, height - 40]],
+        data
+      );
+
+      return data;
+    };
+
+    function fetchData() {
+      d3.select("#loading-state").classed("hidden", false);
+      d3.select("#error-state").classed("hidden", true);
+
+      loadGeoData()
+        .then(data => {
+          d3.select("#loading-state").classed("hidden", true);
+          renderMap(data);
+        })
+        .catch(err => {
+          console.error(err);
+          d3.select("#loading-state").classed("hidden", true);
+          d3.select("#error-state").classed("hidden", false);
+        });
+    }
+
+    function renderMap(geoData) {
+      pathsGrp.selectAll(".state-path")
+        .data(geoData.features)
+        .enter()
+        .append("path")
+        .attr("class", "state-path")
+        .attr("d", pathGen)
+        .attr("fill", d => {
+          const stat = cybercrimeData[getStateName(d.properties)];
+          return stat ? colorScale(stat.count) : "#1a1a2e";
+        })
+        .style("transform-origin", d => {
+          const bounds = pathGen.bounds(d);
+          const cx = (bounds[0][0] + bounds[1][0]) / 2;
+          const cy = (bounds[0][1] + bounds[1][1]) / 2;
+          return `${cx}px ${cy}px`;
+        })
+        .on("mouseenter", handleHoverEnter)
+        .on("mousemove", handleHoverMove)
+        .on("mouseleave", handleHoverLeave)
+        .on("click", handleClick);
+
+      setTimeout(() => {
+        pathsGrp.selectAll(".state-path").each(function (d, i) {
+          const el = d3.select(this);
+          el.style("transition-delay", `${i * 20}ms`)
+            .classed("drawn", true);
+
+          const stat = cybercrimeData[getStateName(d.properties)];
+          const delayTime = i * 20 + 600;
+
+          setTimeout(() => {
+            el.style("transition", "transform 200ms ease-out, stroke 200ms ease-out, stroke-width 200ms ease-out, fill 200ms ease-out");
+            if (stat && stat.count > 5000) {
+              pulseState(el);
+            }
+          }, delayTime);
+        });
+      }, 100);
+
+      labelsGrp.selectAll(".state-label")
+        .data(geoData.features)
+        .enter()
+        .append("text")
+        .attr("class", "state-label")
+        .text(d => abbreviations[getStateName(d.properties)] || "")
+        .attr("x", d => pathGen.centroid(d)[0])
+        .attr("y", d => pathGen.centroid(d)[1])
+        .style("display", d => skipLabels.has(getStateName(d.properties)) ? "none" : null)
+        .style("opacity", 0)
+        .transition()
+        .delay((d, i) => i * 20 + 600)
+        .duration(600)
+        .style("opacity", 1);
+    }
+
+    function pulseState(element) {
+      function repeat() {
+        if (element.classed("hovered")) return;
+        element.transition()
+          .duration(1500)
+          .attr("opacity", 0.7)
+          .transition()
+          .duration(1500)
+          .attr("opacity", 1)
+          .on("end", repeat);
+      }
+      repeat();
+    }
+
+    function handleHoverEnter(event, d) {
+      const stateName = getStateName(d.properties);
+      const stat = cybercrimeData[stateName];
+      const el = d3.select(this);
+
+      el.interrupt();
+      el.attr("opacity", 1);
+
+      if (stat) el.attr("fill", d3.color(colorScale(stat.count)).brighter(1.3));
+      else el.attr("fill", d3.color("#1a1a2e").brighter(1.3));
+
+      el.classed("hovered", true);
+      this.parentNode.appendChild(this);
+
+      tTip.style("display", "block");
+      // Use setTimeout trick to allow display:block to apply before animating opacity
+      setTimeout(() => tTip.classed("visible", true), 10);
+      updateTooltip(d, event);
+    }
+
+    function handleHoverMove(event, d) {
+      updateTooltip(d, event);
+    }
+
+    function handleHoverLeave(event, d) {
+      const stateName = getStateName(d.properties);
+      const stat = cybercrimeData[stateName];
+      const el = d3.select(this);
+
+      if (stat) el.attr("fill", colorScale(stat.count));
+      else el.attr("fill", "#1a1a2e");
+
+      el.classed("hovered", false);
+      tTip.classed("visible", false);
+
+      setTimeout(() => {
+        if (!tTip.classed("visible")) tTip.style("display", "none");
+      }, 150);
+
+      if (stat && stat.count > 5000) {
+        pulseState(el);
+      }
+    }
+
+    function updateTooltip(d, event) {
+      const stateName = getStateName(d.properties);
+      const stat = cybercrimeData[stateName];
+
+      d3.select("#tt-state").text(stateName);
+
+      if (stat) {
+        d3.select("#tt-count").text(stat.count.toLocaleString());
+        const rankEl = d3.select("#tt-rank");
+        rankEl.text(`Rank #${stat.rank} in India`);
+        rankEl.attr("class", "tooltip-rank");
+        if (stat.rank <= 5) rankEl.classed("high", true);
+        else if (stat.rank <= 15) rankEl.classed("medium", true);
+        else rankEl.classed("low", true);
+
+        const pct = (stat.count / 9876) * 100;
+        d3.select("#tt-bar")
+          .style("width", `${pct}%`)
+          .style("background-color", colorScale(stat.count));
+      } else {
+        d3.select("#tt-count").text("Data unavailable");
+        d3.select("#tt-rank").text("—").attr("class", "tooltip-rank");
+        d3.select("#tt-bar").style("width", "0%");
+      }
+
+      let left = event.clientX + 16;
+      let top = event.clientY + 16;
+
+      if (left + 220 > window.innerWidth) left = event.clientX - 220 - 16;
+      if (top + 150 > window.innerHeight) top = event.clientY - 150 - 16;
+
+      tTip.style("left", `${left}px`).style("top", `${top}px`);
+    }
+
+    function handleClick(event, d) {
+      event.stopPropagation();
+      tTip.classed("visible", false).style("display", "none");
+
+      if (activeState.node() === this) return resetZoom();
+
+      activeState.classed("active", false);
+      activeState = d3.select(this).classed("active", true);
+
+      const bounds = pathGen.bounds(d);
+      const dx = bounds[1][0] - bounds[0][0];
+      const dy = bounds[1][1] - bounds[0][1];
+      const x = (bounds[0][0] + bounds[1][0]) / 2;
+      const y = (bounds[0][1] + bounds[1][1]) / 2;
+
+      const viewWidth = width;
+      const viewHeight = height;
+      const scale = Math.max(1, Math.min(8, 0.8 / Math.max(dx / viewWidth, dy / viewHeight)));
+      const translate = [viewWidth / 2 - scale * x, viewHeight / 2 - scale * y];
+
+      svg.transition()
+        .duration(750)
+        .call(zoom.transform, d3.zoomIdentity.translate(translate[0], translate[1]).scale(scale));
+
+      showDetailPanel(d);
+    }
+
+    function resetZoom(event) {
+      if (event) event.stopPropagation();
+      activeState.classed("active", false);
+      activeState = d3.select(null);
+
+      svg.transition()
+        .duration(750)
+        .call(zoom.transform, d3.zoomIdentity);
+
+      detailPanel.classed("visible", false);
+    }
+
+    function showDetailPanel(d) {
+      const stateName = getStateName(d.properties);
+      const stat = cybercrimeData[stateName];
+
+      d3.select("#panel-state").text(stateName);
+      d3.select("#panel-abbr").text(abbreviations[stateName] || "");
+
+      if (stat) {
+        d3.select("#panel-count").text(stat.count.toLocaleString())
+          .style("color", colorScale(stat.count));
+
+        const rankEl = d3.select("#panel-rank");
+        rankEl.text(`Rank #${stat.rank} in India`)
+        rankEl.attr("class", "tooltip-rank");
+        if (stat.rank <= 5) rankEl.classed("high", true);
+        else if (stat.rank <= 15) rankEl.classed("medium", true);
+        else rankEl.classed("low", true);
+
+        const pct = (stat.count / 9876) * 100;
+        d3.select("#panel-bar-fill")
+          .style("width", `${pct}%`)
+          .style("background-color", colorScale(stat.count));
+      } else {
+        d3.select("#panel-count").text("N/A").style("color", "white");
+        d3.select("#panel-rank").text("No Data").attr("class", "tooltip-rank");
+        d3.select("#panel-bar-fill").style("width", "0%");
+      }
+
+      detailPanel.classed("visible", true).style("display", "flex");
+    }
+
+    fetchData();
+  </script>
+</body>
+
+</html>

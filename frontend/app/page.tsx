@@ -101,13 +101,20 @@ export default function LandingPage() {
       <div className="absolute inset-0 bg-grid-animated pointer-events-none w-full h-full"></div>
       <div className="binary-rain pointer-events-none">{'0 1 1 0 1 0 0 1 0 1 1 0 1 1 0 '.repeat(300)}</div>
 
-      {/* Floating Nodes for depth */}
-      {[...Array(6)].map((_, i) => (
+      {/* Floating Nodes for depth - using fixed positions for hydration */}
+      {[
+        { top: '15%', left: '10%', scale: 0.8 },
+        { top: '35%', left: '85%', scale: 1.2 },
+        { top: '60%', left: '20%', scale: 0.6 },
+        { top: '75%', left: '70%', scale: 1.0 },
+        { top: '25%', left: '50%', scale: 0.9 },
+        { top: '85%', left: '40%', scale: 0.7 },
+      ].map((pos, i) => (
         <div key={i} className="network-node pointer-events-none" style={{
-          top: `${Math.random() * 100}%`,
-          left: `${Math.random() * 100}%`,
+          top: pos.top,
+          left: pos.left,
           animationDelay: `${i * 1.8}s`,
-          transform: `scale(${0.5 + Math.random()})`
+          transform: `scale(${pos.scale})`
         }}></div>
       ))}
 
@@ -223,6 +230,17 @@ export default function LandingPage() {
               </div>
             ))}
           </div>
+        </section>
+
+        {/* 3.5 CYBERCRIME HEATMAP MAP WIDGET */}
+        <section id="cybercrime-map" className="mb-24 w-full relative border border-white/10 rounded-xl overflow-hidden shadow-[0_0_30px_rgba(6,182,212,0.1)]">
+          <iframe 
+            src="/cybercrime-map.html" 
+            title="India Cybercrime Heatmap"
+            width="100%" 
+            height="900px" 
+            style={{ height: '90vh', minHeight: '600px', border: 'none', display: 'block' }}
+          />
         </section>
 
         {/* 4. THE AI EXPLAINABILITY ENGINE SECTION */}
