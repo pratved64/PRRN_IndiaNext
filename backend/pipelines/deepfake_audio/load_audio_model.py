@@ -1,4 +1,5 @@
 import torch
+import os
 from transformers import Wav2Vec2ForCTC, Wav2Vec2Processor
 
 DEVICE   = "cuda" if torch.cuda.is_available() else "cpu"
