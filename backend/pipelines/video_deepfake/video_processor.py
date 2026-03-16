@@ -9,8 +9,8 @@ import mediapipe as mp
 TARGET_SIZE = 224
 
 # Initialize MediaPipe Face Detection globally so it doesn't reload every frame
-mp_face_detection = mp.tasks.vision.FaceDetector
-face_detector = mp_face_detection()
+mp_face_detection = mp.solutions.face_detection
+face_detector = mp_face_detection.FaceDetection(min_detection_confidence=0.5)
 def _safe_crop(frame: np.ndarray, x1: int, y1: int, x2: int, y2: int) -> np.ndarray:
     """Clamp bounding box to frame dimensions before slicing."""
     h, w = frame.shape[:2]
