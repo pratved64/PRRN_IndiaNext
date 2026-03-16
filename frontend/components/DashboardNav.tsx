@@ -31,9 +31,26 @@ export default function DashboardNav() {
       {/* Dashboard Navigation Navbar */}
       <header className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-white/10">
         <div>
-          <Link href="/" className="inline-block group">
-            <h1 className="text-3xl md:text-4xl font-light tracking-tight text-white mb-2 lowercase group-hover:text-neutral-300 transition-colors">
-              abhedya<span className="font-bold">.sec</span>
+          <Link href="/" className="flex items-center gap-4 group cursor-pointer mb-2">
+            <div className="relative w-10 h-10 flex items-center justify-center perspective-[1000px]">
+              {/* Outer 3D Gyroscope Ring 1 */}
+              <div 
+                className="absolute w-full h-full rounded-full border-t-2 border-r-2 border-cyan-400/80 shadow-[0_0_15px_rgba(6,182,212,0.5)] group-hover:border-cyan-300 group-hover:shadow-[0_0_25px_rgba(6,182,212,0.8)] transition-all duration-300" 
+                style={{ animation: 'gyro1 5s linear infinite' }}>
+              </div>
+              {/* Outer 3D Gyroscope Ring 2 */}
+              <div 
+                className="absolute w-full h-full rounded-full border-b-2 border-l-2 border-blue-600/80 shadow-[0_0_15px_rgba(37,99,235,0.5)] group-hover:border-blue-400 transition-all duration-300" 
+                style={{ animation: 'gyro2 7s linear infinite' }}>
+              </div>
+              {/* Inner Glowing AI Pupil / Core */}
+              <div className="absolute w-4 h-4 rounded-full bg-gradient-to-tr from-cyan-400 to-white shadow-[0_0_20px_rgba(255,255,255,0.9)] core-pulse group-hover:scale-125 transition-transform duration-300 flex items-center justify-center">
+                 <div className="w-1.5 h-1.5 bg-white rounded-full blur-[1px]"></div>
+              </div>
+            </div>
+
+            <h1 className="text-3xl md:text-4xl font-light tracking-widest text-white uppercase group-hover:text-cyan-50 transition-colors drop-shadow-[0_0_8px_rgba(255,255,255,0.2)] m-0 leading-none">
+              abhedya<span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">.sec</span>
             </h1>
           </Link>
           <p className="text-neutral-500 font-mono text-xs uppercase tracking-widest border-l-2 border-white/20 pl-3">

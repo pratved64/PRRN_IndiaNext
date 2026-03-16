@@ -54,6 +54,8 @@ export default function LandingPage() {
           0%, 100% { opacity: 0.1; transform: scale(1); }
           50% { opacity: 0.8; transform: scale(1.05); }
         }
+
+
         .bg-grid-animated {
           background-size: 40px 40px;
           background-image: 
@@ -118,7 +120,7 @@ export default function LandingPage() {
         }}></div>
       ))}
 
-      {/* New Background Animation Layer ( Interpretation D ) */}
+      {/* Background Animation Layer */}
       <div className="cyber-lock-container">
           <div className="aura-red"></div>
           <div className="aura-blue"></div>
@@ -131,18 +133,36 @@ export default function LandingPage() {
       <nav className={`fixed top-0 w-full z-50 transition-all duration-300 border-b ${scrolled ? 'bg-neutral-950/80 backdrop-blur-md border-white/10 py-3' : 'bg-transparent border-transparent py-5'}`}>
         <div className="max-w-7xl mx-auto px-6 md:px-12 flex justify-between items-center">
 
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-4 h-4 bg-white rounded-sm shadow-[0_0_10px_rgba(255,255,255,0.5)] group-hover:shadow-[0_0_15px_rgba(255,255,255,0.8)] transition-shadow"></div>
-            <span className="text-xl font-light tracking-widest text-white uppercase group-hover:text-neutral-300 transition-colors">
-              abhedya<span className="font-bold">.sec</span>
+          {/* 3D Chatbot AI Core Logo */}
+          <Link href="/" className="flex items-center gap-4 group cursor-pointer">
+            <div className="relative w-10 h-10 flex items-center justify-center perspective-[1000px]">
+              
+              {/* Outer 3D Gyroscope Ring 1 */}
+              <div 
+                className="absolute w-full h-full rounded-full border-t-2 border-r-2 border-cyan-400/80 shadow-[0_0_15px_rgba(6,182,212,0.5)] group-hover:border-cyan-300 group-hover:shadow-[0_0_25px_rgba(6,182,212,0.8)] transition-all duration-300" 
+                style={{ animation: 'gyro1 5s linear infinite' }}>
+              </div>
+              
+              {/* Outer 3D Gyroscope Ring 2 */}
+              <div 
+                className="absolute w-full h-full rounded-full border-b-2 border-l-2 border-blue-600/80 shadow-[0_0_15px_rgba(37,99,235,0.5)] group-hover:border-blue-400 transition-all duration-300" 
+                style={{ animation: 'gyro2 7s linear infinite' }}>
+              </div>
+              
+              {/* Inner Glowing AI Pupil / Core */}
+              <div className="absolute w-4 h-4 rounded-full bg-gradient-to-tr from-cyan-400 to-white shadow-[0_0_20px_rgba(255,255,255,0.9)] core-pulse group-hover:scale-125 transition-transform duration-300 flex items-center justify-center">
+                 <div className="w-1.5 h-1.5 bg-white rounded-full blur-[1px]"></div>
+              </div>
+            </div>
+
+            <span className="text-2xl font-light tracking-widest text-white uppercase group-hover:text-cyan-50 transition-colors drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]">
+              abhedya<span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">.sec</span>
             </span>
           </Link>
 
-          {/* Nav Links */}
-          <div className="hidden md:flex items-center gap-8 text-sm font-mono uppercase tracking-widest text-neutral-400">
+          {/* Nav Links (ADDED md:ml-12 lg:ml-24 HERE TO CREATE THE GAP) */}
+          <div className="hidden md:flex items-center gap-8 text-sm font-mono uppercase tracking-widest text-neutral-400 md:ml-12 lg:ml-24">
             
-            {/* TOGGLE BUTTON REPLACING 'PLATFORM' */}
             <button 
               onClick={toggleTheme}
               className="hover:text-white transition flex items-center gap-2 cursor-pointer focus:outline-none"

@@ -1,1 +1,18 @@
 @import "tailwindcss";
+
+/* 3D LOGO KEYFRAMES */
+@keyframes gyro1 {
+  0% { transform: rotateX(60deg) rotateY(0deg) rotateZ(0deg); }
+  100% { transform: rotateX(60deg) rotateY(360deg) rotateZ(360deg); }
+}
+@keyframes gyro2 {
+  0% { transform: rotateX(120deg) rotateY(0deg) rotateZ(0deg); }
+  100% { transform: rotateX(120deg) rotateY(-360deg) rotateZ(-360deg); }
+}
+@keyframes auraBlue {
+  0%, 100% { opacity: 0.1; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.05); }
+}
+.core-pulse {
+  animation: auraBlue 2s ease-in-out infinite alternate;
+}

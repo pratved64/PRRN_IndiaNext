@@ -62,10 +62,26 @@ export default function LoginPage() {
         
         {/* Header */}
         <div className="mb-8 text-center flex flex-col items-center">
-          <Link href="/" className="flex items-center gap-3 mb-6 hover:opacity-80 transition">
-            <div className="w-4 h-4 bg-white rounded-sm shadow-[0_0_10px_rgba(255,255,255,0.5)]"></div>
-            <span className="text-xl font-light tracking-widest text-white uppercase">
-              Threat<span className="font-bold">Analyzer</span>
+          <Link href="/" className="flex items-center gap-4 group cursor-pointer mb-6">
+            <div className="relative w-10 h-10 flex items-center justify-center perspective-[1000px]">
+              {/* Outer 3D Gyroscope Ring 1 */}
+              <div 
+                className="absolute w-full h-full rounded-full border-t-2 border-r-2 border-cyan-400/80 shadow-[0_0_15px_rgba(6,182,212,0.5)] group-hover:border-cyan-300 group-hover:shadow-[0_0_25px_rgba(6,182,212,0.8)] transition-all duration-300" 
+                style={{ animation: 'gyro1 5s linear infinite' }}>
+              </div>
+              {/* Outer 3D Gyroscope Ring 2 */}
+              <div 
+                className="absolute w-full h-full rounded-full border-b-2 border-l-2 border-blue-600/80 shadow-[0_0_15px_rgba(37,99,235,0.5)] group-hover:border-blue-400 transition-all duration-300" 
+                style={{ animation: 'gyro2 7s linear infinite' }}>
+              </div>
+              {/* Inner Glowing AI Pupil / Core */}
+              <div className="absolute w-4 h-4 rounded-full bg-gradient-to-tr from-cyan-400 to-white shadow-[0_0_20px_rgba(255,255,255,0.9)] core-pulse group-hover:scale-125 transition-transform duration-300 flex items-center justify-center">
+                 <div className="w-1.5 h-1.5 bg-white rounded-full blur-[1px]"></div>
+              </div>
+            </div>
+
+            <span className="text-2xl font-light tracking-widest text-white uppercase group-hover:text-cyan-50 transition-colors drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]">
+              abhedya<span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">.sec</span>
             </span>
           </Link>
           <h1 className="text-3xl font-light text-white tracking-tight">Access <span className="font-bold">Terminal</span></h1>
