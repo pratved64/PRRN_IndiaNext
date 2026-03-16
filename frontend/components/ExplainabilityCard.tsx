@@ -2,21 +2,26 @@
 
 import React from "react";
 
+interface HighlightedWord {
+  word: string;
+  score: number;
+}
+
 interface ThreatResult {
   threatType: string;
   riskLevel: "None" | "Low" | "Medium" | "High" | "Critical";
   confidence: number;
-  explanations: string[];
+  explanations: HighlightedWord[]; // ← now carries full {word, score} objects
   recommendation: string;
 }
 
 export default function ExplainabilityCard({ result }: { result: ThreatResult }) {
-  // Apply your specific color rules
   const getAlertStyles = (level: string) => {
     if (level === "Critical" || level === "High") {
       return {
         wrapper: "border-red-500/50 bg-red-950/20",
         header: "border-red-500/50 bg-red-500/10 text-red-400",
+        scoreBar: "bg-red-500",
         icon: "🔴",
       };
     }
@@ -24,21 +29,27 @@ export default function ExplainabilityCard({ result }: { result: ThreatResult })
       return {
         wrapper: "border-green-500/50 bg-green-950/20",
         header: "border-green-500/50 bg-green-500/10 text-green-400",
+        scoreBar: "bg-green-500",
         icon: "🟢",
       };
     }
-    // Default to White for Low/Medium
+    // Low / Medium → white
     return {
       wrapper: "border-white/20 bg-white/5",
       header: "border-white/20 bg-white/10 text-white",
+      scoreBar: "bg-white",
       icon: "⚪",
     };
   };
 
   const styles = getAlertStyles(result.riskLevel);
 
+  // Sort descending by score so highest-influence words appear first
+  const sortedExplanations = [...result.explanations].sort((a, b) => b.score - a.score);
+
   return (
     <div className={`mt-8 border backdrop-blur-sm rounded-lg overflow-hidden transition-all duration-300 ${styles.wrapper}`}>
+      
       {/* Header */}
       <div className={`px-6 py-4 border-b flex justify-between items-center ${styles.header}`}>
         <div className="flex items-center gap-3">
@@ -50,28 +61,50 @@ export default function ExplainabilityCard({ result }: { result: ThreatResult })
         </div>
         <div className="text-right">
           <div className="text-xs uppercase tracking-widest opacity-70 mb-1">Risk Level</div>
-          <div className="text-xl font-bold uppercase tracking-wider">
-            {result.riskLevel}
-          </div>
+          <div className="text-xl font-bold uppercase tracking-wider">{result.riskLevel}</div>
         </div>
       </div>
 
-      {/* Explanation Body */}
+      {/* Diagnostic Body */}
       <div className="p-6 text-gray-300">
+        
+        {/* Flagged Indicators */}
         <h4 className="text-sm font-mono uppercase tracking-widest text-gray-400 mb-4 border-b border-white/10 pb-2">
           Diagnostic Logs // Why flagged
         </h4>
-        <ul className="space-y-3 mb-8 font-mono text-sm">
-          {result.explanations.map((reason, index) => (
-            <li key={index} className="flex items-start">
-              <span className="mr-3 opacity-50">{`[0${index + 1}]`}</span>
-              <span>{reason}</span>
-            </li>
-          ))}
-          {result.explanations.length === 0 && (
-            <li className="text-green-400">No suspicious indicators detected in the payload.</li>
-          )}
-        </ul>
+
+        {sortedExplanations.length === 0 ? (
+          <p className="text-green-400 font-mono text-sm mb-8">
+            No suspicious indicators detected in the payload.
+          </p>
+        ) : (
+          <ul className="space-y-3 mb-8 font-mono text-sm">
+            {sortedExplanations.map((item, index) => {
+              // score is 0–1 from backend; render as a percentage bar
+              const pct = Math.round(item.score * 100);
+              return (
+                <li key={index} className="flex items-center gap-4">
+                  {/* Index tag */}
+                  <span className="opacity-40 shrink-0 w-8">{`[${String(index + 1).padStart(2, "0")}]`}</span>
+
+                  {/* Word label */}
+                  <span className="flex-1 truncate">{item.word}</span>
+
+                  {/* Score bar */}
+                  <div className="flex items-center gap-2 shrink-0">
+                    <div className="w-24 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${styles.scoreBar}`}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <span className="text-[10px] opacity-50 w-8 text-right">{pct}%</span>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
 
         {/* Recommendation */}
         <div className="bg-black/40 border border-white/10 p-4 rounded-md">

@@ -95,11 +95,12 @@ async def analyze_media_endpoint(
     """
     Step 5.1–5.4: Accept media upload, check MIME type, route to image/video processor, return JSON.
     """
-    model = request.app.state.vit_model
-    processor = request.app.state.vit_processor
-
-    if model is None or processor is None:
-        raise HTTPException(status_code=503, detail="Deepfake model is unavailable or still loading.")
+    try:
+        # Lazy load the model
+        from main import get_vit_model
+        processor, model = await get_vit_model(request.app)
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Deepfake model failed to load: {str(e)}")
 
     content_type = file.content_type or ""
 

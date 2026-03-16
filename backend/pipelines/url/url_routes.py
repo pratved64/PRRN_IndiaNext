@@ -4,21 +4,19 @@ import anyio
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 from typing import List
-
+from functools import partial
 from pipelines.phishing.phishing import analyze_email
 from pipelines.url.url_resolver import resolve_url
+from pipelines.shared.model_loader import get_phishing_model
 
 router = APIRouter(prefix="/analyze", tags=["URL Analysis"])
-
 
 class UrlRequest(BaseModel):
     url: str = Field(..., description="The URL to analyze (shorteners will be resolved)")
 
-
 class HighlightedWord(BaseModel):
     word: str
     score: float
-
 
 class UrlResponse(BaseModel):
     risk_score: float
@@ -26,7 +24,6 @@ class UrlResponse(BaseModel):
     original_url: str
     resolved_url: str
     highlighted_words: List[HighlightedWord]
-
 
 def translate_risk_score(score: float) -> str:
     if score >= 0.75:
@@ -36,9 +33,7 @@ def translate_risk_score(score: float) -> str:
     else:
         return "Low Risk: Looks Safe"
 
-
 _URL_TOKENIZER_PATTERN = re.compile(r"[./:-]+")
-
 
 def _preprocess_url_for_model(url: str) -> str:
     """
@@ -53,18 +48,16 @@ def _preprocess_url_for_model(url: str) -> str:
     text = " ".join(text.split())
     return text
 
-
 @router.post("/url", response_model=UrlResponse)
 async def analyze_url_endpoint(request_data: UrlRequest, request: Request):
     """
     Resolves the URL (including shorteners) and runs shared DistilBERT inference.
     Returns risk_score, classification, original_url, resolved_url, and highlighted_words.
     """
-    model = request.app.state.model
-    tokenizer = request.app.state.tokenizer
-
-    if model is None or tokenizer is None:
-        raise HTTPException(status_code=503, detail="Phishing models are unavailable or still loading.")
+    try:
+        tokenizer, model = await get_phishing_model(request.app)
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Phishing models failed to load: {str(e)}")
 
     original_url = request_data.url
 
@@ -81,10 +74,9 @@ async def analyze_url_endpoint(request_data: UrlRequest, request: Request):
     # Step 2: Run inference on the resolved URL (offloaded to thread pool per RULES.md)
     try:
         clean_text = _preprocess_url_for_model(resolved_url)
-        result = await anyio.to_thread.run_sync(analyze_email, clean_text, model, tokenizer)
-
+        fn = partial(analyze_email, clean_text, model, tokenizer)
+        result = await anyio.to_thread.run_sync(fn)
         risk_score = result["risk_score"]
-
         return UrlResponse(
             risk_score=risk_score,
             classification=translate_risk_score(risk_score),

@@ -149,12 +149,21 @@ if (!document.getElementById('abhedya-styles')) {
 
 chrome.runtime.onMessage.addListener((message) => {
     if (message.type === 'SHOW_WARNING') {
-        const checkBody = setInterval(() => {
-            if (document.body) {
-                clearInterval(checkBody);
-                showWarningOverlay(message.data);
-            }
-        }, 100);
+        if (document.body) {
+            showWarningOverlay(message.data);
+        } else {
+            // Use MutationObserver for high-performance body detection
+            const observer = new MutationObserver((mutations, obs) => {
+                if (document.body) {
+                    showWarningOverlay(message.data);
+                    obs.disconnect();
+                }
+            });
+            observer.observe(document.documentElement, { childList: true });
+            
+            // Fallback timeout
+            setTimeout(() => observer.disconnect(), 10000);
+        }
     }
     if (message.type === 'HIDE_WARNING') {
         hideWarningOverlay();

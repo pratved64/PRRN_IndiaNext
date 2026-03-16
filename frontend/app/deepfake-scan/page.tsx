@@ -148,72 +148,64 @@ export default function DeepfakeScanner() {
     }
   };
 
-  const handleAnalyze = (scenario: "threat" | "safe" = "threat") => {
+  const handleAnalyze = async (scenario: "threat" | "safe" = "threat") => {
     if (!file) return;
     setIsAnalyzing(true);
     setResult(null);
 
-    const fileType = file.type.split('/')[0]; // 'image', 'video', or 'audio'
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
 
-    setTimeout(() => {
-      let mockResult: ThreatResult;
+      const response = await fetch('/api/analyze/media', {
+        method: 'POST',
+        body: formData,
+      });
 
-      if (scenario === "threat") {
-        mockResult = {
-          threatType: "AI-Generated Media (Deepfake)",
-          riskLevel: "Critical",
-          confidence: 96,
-          explanations: [],
-          recommendation: "Flag this media as synthetic. Quarantine and verify sender identity through secondary channels (e.g., live phone call)."
-        };
-
-        if (fileType === 'video') {
-          mockResult.explanations = [
-            "Facial artifacts detected: Unnatural blurring around the jawline and eyes.",
-            "Lip-sync mismatch: Audio phonemes do not align perfectly with mouth movements at 0:12s.",
-            "Lighting inconsistency: Shadows on the subject's face do not match the background environment."
-          ];
-          mockResult.timelineMarkers = [
-            { time: 2.5, label: "Jawline blur" },
-            { time: 6.1, label: "Shadow mismatch" },
-            { time: 12.0, label: "Lip-sync fail" }
-          ];
-        } else if (fileType === 'audio') {
-          mockResult.explanations = [
-            "Spectral anomalies: Unnatural frequency cutoffs typical of AI voice cloning models (e.g., ElevenLabs).",
-            "Breathing patterns: Absence of natural inhalation sounds between sentences.",
-            "Monotone pitch variations: Emotional cadence lacks human-like micro-fluctuations."
-          ];
-          mockResult.timelineMarkers = [
-            { time: 3.4, label: "Missing breath" },
-            { time: 8.2, label: "Pitch anomaly" },
-            { time: 14.7, label: "Spectral cutoff" }
-          ];
-        } else {
-          mockResult.explanations = [
-            "Generative AI artifacts: Asymmetrical features detected in the background.",
-            "Metadata analysis: Missing standard EXIF data; software tag indicates 'Stable Diffusion'.",
-            "Pixel-level noise: Noise distribution is uniform and lacks natural camera sensor grain."
-          ];
-        }
-      } else {
-        // Safe Scenario
-        mockResult = {
-          threatType: "Authentic Media Verified",
-          riskLevel: "None",
-          confidence: 99,
-          explanations: [
-            "Metadata intact: Standard camera/recording device signatures present.",
-            "Forensic analysis: No synthetic noise artifacts or pixel anomalies detected.",
-            "Temporal consistency: Frame-by-frame rendering is consistent with natural physics."
-          ],
-          recommendation: "Media passed all cryptographic and heuristic checks. Safe to process."
-        };
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
       }
 
-      setResult(mockResult);
+      const data = await response.json();
+
+      // Transform backend response to frontend format
+      const riskLevel = data.classification?.includes('High') ? 'Critical' :
+                       data.classification?.includes('Medium') ? 'Medium' :
+                       data.classification?.includes('Low') ? 'Low' : 'None';
+
+      const fileType = file.type.split('/')[0];
+      let explanations: string[] = [];
+      let timelineMarkers: { time: number; label: string }[] = [];
+
+      if (fileType === 'video' || fileType === 'audio') {
+        // Add some mock timeline markers for demo purposes
+        timelineMarkers = [
+          { time: 2.5, label: "Analysis point" },
+          { time: 6.1, label: "Analysis point" },
+          { time: 12.0, label: "Analysis point" }
+        ];
+      }
+
+      setResult({
+        threatType: data.classification || 'Analysis Complete',
+        riskLevel: riskLevel as "None" | "Low" | "Medium" | "High" | "Critical",
+        confidence: Math.round((data.risk_score || 0) * 100),
+        explanations: explanations,
+        recommendation: data.classification || 'Analysis completed',
+        timelineMarkers: timelineMarkers
+      });
+    } catch (error) {
+      console.error('Media analysis failed:', error);
+      setResult({
+        threatType: 'Analysis Failed',
+        riskLevel: 'None',
+        confidence: 0,
+        explanations: ['Failed to analyze media. Please try again.'],
+        recommendation: 'Please check your connection and try again.'
+      });
+    } finally {
       setIsAnalyzing(false);
-    }, 2500);
+    }
   };
 
   const clearInput = () => {
@@ -396,7 +388,7 @@ export default function DeepfakeScanner() {
                     </div>
 
                     {/* Custom Controls */}
-                    <div className="w-full max-w-md bg-neutral-900 border border-white/10 rounded-xl p-4 flex flex-col gap-4 shadow-xl relative z-40 relative z-50 pointer-events-auto">
+                    <div className="w-full max-w-md bg-neutral-900 border border-white/10 rounded-xl p-4 flex flex-col gap-4 shadow-xl relative z-50 pointer-events-auto">
                       
                       <div className="flex items-center justify-between w-full relative z-50">
                         {/* Play / Pause Toggle */}

@@ -375,3 +375,11 @@ footer {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+/* SETTINGS STYLES */
+.settings-note {
+  color: var(--text-secondary);
+  font-size: 11px;
+  margin-top: 8px;
+  line-height: 1.3;
+}

@@ -33,6 +33,10 @@
       <span class="count-badge" 
             id="blocklist-count">0</span>
     </button>
+    <button class="tab-btn" 
+            data-tab="settings">
+      SETTINGS
+    </button>
   </nav>
 
   <!-- TAB 1: URL SCAN -->
@@ -127,6 +131,26 @@
          id="blocklist-empty">
       No URLs scanned yet. 
       Browse the web to start scanning.
+    </div>
+
+  <!-- TAB 4: SETTINGS -->
+  <div class="tab-content" id="tab-settings">
+    
+    <div class="input-label">
+      BACKEND API URL
+    </div>
+    <div class="input-row">
+      <input type="text" 
+             id="api-base-input"
+             placeholder="http://localhost:8000"
+             class="text-input" />
+      <button id="save-api-btn" 
+              class="scan-btn">
+        SAVE
+      </button>
+    </div>
+    <div class="settings-note">
+      Change this if your backend is running on a different URL or port.
     </div>
 
   </div>

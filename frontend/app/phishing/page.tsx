@@ -6,11 +6,16 @@ import DashboardNav from "@/components/DashboardNav";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { useTheme } from "@/lib/ThemeContext";
 
+interface HighlightedWord {
+  word: string;
+  score: number;
+}
+
 interface ThreatResult {
   threatType: string;
   riskLevel: "None" | "Low" | "Medium" | "High" | "Critical";
   confidence: number;
-  explanations: string[];
+  explanations: HighlightedWord[]; // full {word, score} objects from backend
   recommendation: string;
 }
 
@@ -31,35 +36,65 @@ export default function PhishingAnalyzer() {
 
   const handleAnalyze = async (scenario: "threat" | "safe" = "threat") => {
     if (!inputText.trim()) return;
-    
+
     setIsAnalyzing(true);
     setResult(null);
 
-    // Simulate AI API Call
-    setTimeout(() => {
-      if (scenario === "threat") {
-        setResult({
-          threatType: "Spear Phishing / Credential Harvesting",
-          riskLevel: "Critical",
-          confidence: 98,
-          explanations: [
-            "Urgency indicator: Language pressures user with an artificial 24-hour deadline.",
-            "Domain spoofing: Reply-to address 'admin@paypal-support-web.com' is not an official domain.",
-            "Malicious payload: Embedded URL redirects through two known malicious obfuscation gateways."
-          ],
-          recommendation: "Quarantine email across all organizational inboxes. Block sender IP. Do not click links."
-        });
-      } else {
-        setResult({
-          threatType: "Standard Communication",
-          riskLevel: "None",
-          confidence: 99,
-          explanations: [],
-          recommendation: "No action required. Communication appears benign."
-        });
+    try {
+      const response = await fetch('/api/analyze/text', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text: inputText }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
       }
+
+      // Backend ThreatResponse shape:
+      // { risk_score: float, classification: string, highlighted_words: {word, score}[] }
+      const data: {
+        risk_score: number;
+        classification: string;
+        highlighted_words: { word: string; score: number }[];
+      } = await response.json();
+
+      // Map backend classification string → frontend riskLevel enum
+      // classification values from translate_risk_score():
+      //   "High Risk: Phishing Attempt Detected"   → "Critical"
+      //   "Medium Risk: Suspicious Elements Found" → "Medium"
+      //   "Low Risk: Looks Safe"                   → "Low"
+      const riskLevel: ThreatResult["riskLevel"] = data.classification.startsWith("High")
+        ? "Critical"
+        : data.classification.startsWith("Medium")
+        ? "Medium"
+        : data.classification.startsWith("Low")
+        ? "Low"
+        : "None";
+
+      setResult({
+        threatType: data.classification,
+        riskLevel,
+        // risk_score is 0–1 from backend; convert to 0–100 percentage for UI
+        confidence: Math.round(data.risk_score * 100),
+        // Pass full {word, score} objects so ExplainabilityCard can render relevance bars
+        explanations: data.highlighted_words,
+        recommendation: data.classification,
+      });
+    } catch (error) {
+      console.error('Analysis failed:', error);
+      setResult({
+        threatType: 'Analysis Failed',
+        riskLevel: 'None',
+        confidence: 0,
+        explanations: ['Failed to analyze text. Please try again.'],
+        recommendation: 'Please check your connection and try again.'
+      });
+    } finally {
       setIsAnalyzing(false);
-    }, 2500); // Slightly longer to show off the scanning effects
+    }
   };
 
   const clearInput = () => {
