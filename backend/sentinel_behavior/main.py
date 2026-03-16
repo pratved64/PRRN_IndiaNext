@@ -23,25 +23,33 @@ Endpoints:
 Run with: uvicorn main:app --reload
 """
 
-from dotenv import load_dotenv
-load_dotenv()
-
 import os
 import sys
+from dotenv import load_dotenv
+from pathlib import Path
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+def _load_env():
+    here = Path(__file__).parent
+    for candidate in [here, here.parent, here.parent.parent]:
+        env_file = candidate / ".env"
+        if env_file.exists():
+            load_dotenv(dotenv_path=env_file)
+            print(f"Loaded .env from {env_file}")
+            return
+    load_dotenv()
+
+_load_env()
+
 import time
 import asyncio
 import logging
 from contextlib import asynccontextmanager
 from typing import Dict, List, Optional, Any
 
-from fastapi import FastAPI, HTTPException, Request, Response, Body
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-import json as json_lib
-
-# Ensure this file's directory is on the path so relative imports resolve
-# whether run via `uvicorn main:app` or `uvicorn sentinel_behavior.main:app`
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from fastapi import APIRouter
+from fastapi import HTTPException, Request, Response, Body
 
 from data_generator import get_all_sessions, get_user_normal_sessions, DEMO_ATTACK_EVENTS
 from feature_engineer import extract_features, get_feature_names
@@ -80,21 +88,13 @@ _history_store: Dict[str, List[dict]] = {}
 
 
 # ---------------------------------------------------------------------------
-# Lifespan — model training on startup
+# Startup function - called from root main.py lifespan
 # ---------------------------------------------------------------------------
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
+async def startup_sentinel(app):
     """
-    FastAPI lifespan context manager.
-
-    On startup:
-        1. Load all synthetic sessions.
-        2. Train one IsolationForest per user on their normal sessions.
-        3. Train one AutoencoderManager per user on their normal feature vectors.
-        4. Store all trained objects in app.state.
-    On shutdown:
-        Logs a clean shutdown message.
+    Runs all model training and stores results in app.state.
+    Called from root main.py lifespan.
     """
     logger.info("=" * 60)
     logger.info("SENTINEL AI — Starting model training pipeline...")
@@ -148,79 +148,12 @@ async def lifespan(app: FastAPI):
     logger.info(f"Users trained: {len(user_ids)} ({', '.join(user_ids)})")
     logger.info("=" * 60)
 
-    yield  # ← app is now live and serving requests
-
-    logger.info("SENTINEL AI — shutting down cleanly.")
-
 
 # ---------------------------------------------------------------------------
-# App initialization
+# Router initialization
 # ---------------------------------------------------------------------------
 
-app = FastAPI(
-    title="SENTINEL AI — Anomalous Behavior Detection API",
-    description=(
-        "Production-ready API for detecting suspicious login patterns using "
-        "an ensemble of Isolation Forest, Autoencoder, deterministic rules, "
-        "SHAP explainability, and Groq LLM narrative generation."
-    ),
-    version="1.0.0",
-    lifespan=lifespan,
-)
-
-# CORS — allow all origins for hackathon demo
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-@app.exception_handler(Exception)
-async def global_exception_handler(
-    request: Request, exc: Exception
-):
-    print(f"UNHANDLED ERROR on {request.url}: {exc}")
-    return JSONResponse(
-        status_code=500,
-        content={
-            "error": type(exc).__name__,
-            "message": str(exc),
-            "path": str(request.url)
-        }
-    )
-
-
-# ---------------------------------------------------------------------------
-# Request/response logging middleware
-# ---------------------------------------------------------------------------
-
-@app.middleware("http")
-async def log_requests(request: Request, call_next) -> Response:
-    """
-    Log every HTTP request with endpoint path, status code, and latency.
-
-    Args:
-        request: Incoming HTTP request.
-        call_next: The next handler in the middleware chain.
-
-    Returns:
-        HTTP response from the handler.
-    """
-    start = time.perf_counter()
-    print("DEBUG: log_requests: Got request: ", request.method, request.url)
-    response: Response = await call_next(request)
-    print("DEBUG: log_requests: Awaiting response done")
-    elapsed_ms = (time.perf_counter() - start) * 1000
-    logger.info(
-        "%s %s → %d (%.1f ms)",
-        request.method,
-        request.url.path,
-        response.status_code,
-        elapsed_ms,
-    )
-    return response
+router = APIRouter()
 
 
 # ---------------------------------------------------------------------------
@@ -382,7 +315,7 @@ async def _run_analysis_pipeline(
 # Endpoints
 # ---------------------------------------------------------------------------
 
-@app.post(
+@router.post(
     "/analyze",
     response_model=ExplanationPayload,
     tags=["Core"]
@@ -415,7 +348,7 @@ async def analyze_login(
     )
 
 
-@app.post(
+@router.post(
     "/analyze/test",
     response_model=ExplanationPayload,
     tags=["Demo"],
@@ -449,7 +382,7 @@ async def analyze_test(request: Request):
     )
 
 
-@app.get("/demo-scenarios", response_model=List[DemoScenario], tags=["Demo"])
+@router.get("/demo-scenarios", response_model=List[DemoScenario], tags=["Demo"])
 async def list_demo_scenarios() -> List[DemoScenario]:
     """
     Return all 5 pre-built attack demo scenarios.
@@ -463,7 +396,7 @@ async def list_demo_scenarios() -> List[DemoScenario]:
     return DEMO_SCENARIOS
 
 
-@app.post("/demo/{scenario_id}", response_model=ExplanationPayload, tags=["Demo"])
+@router.post("/demo/{scenario_id}", response_model=ExplanationPayload, tags=["Demo"])
 async def run_demo_scenario(scenario_id: str, request: Request) -> ExplanationPayload:
     """
     Run a pre-built demo scenario through the full analysis pipeline.
@@ -491,7 +424,7 @@ async def run_demo_scenario(scenario_id: str, request: Request) -> ExplanationPa
     return await _run_analysis_pipeline(scenario.event, request.app.state)
 
 
-@app.get("/user/{user_id}/history", response_model=List[HistorySummaryItem], tags=["Users"])
+@router.get("/user/{user_id}/history", response_model=List[HistorySummaryItem], tags=["Users"])
 async def get_user_history(user_id: str) -> List[HistorySummaryItem]:
     """
     Return the last 20 login event summaries for a given user.
@@ -519,7 +452,7 @@ async def get_user_history(user_id: str) -> List[HistorySummaryItem]:
     return [HistorySummaryItem(**item) for item in last_20]
 
 
-@app.get("/health", tags=["System"])
+@router.get("/health", tags=["System"])
 async def health_check(request: Request) -> dict:
     """
     Return the system health and model readiness status.
@@ -544,3 +477,32 @@ async def health_check(request: Request) -> dict:
         "models_loaded": models_loaded,
         "users_trained": users_trained,
     }
+
+
+if __name__ == "__main__":
+    import uvicorn
+    from contextlib import asynccontextmanager
+    from fastapi import FastAPI
+    from fastapi.middleware.cors import CORSMiddleware
+    
+    @asynccontextmanager
+    async def _standalone_lifespan(a: FastAPI):
+        await startup_sentinel(a)
+        yield
+    
+    standalone_app = FastAPI(
+        lifespan=_standalone_lifespan
+    )
+    standalone_app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+    standalone_app.include_router(router)
+    uvicorn.run(
+        standalone_app, 
+        host="0.0.0.0", 
+        port=8001
+    )
