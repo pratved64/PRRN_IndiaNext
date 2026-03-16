@@ -21,8 +21,6 @@ export const translations: Translations = {
   en: {
     // Nav
     "nav.platform": "Platform",
-    "nav.engine": "AI Engine",
-    "nav.integration": "Integration",
     "nav.login": "Login",
     "nav.signup": "Sign Up",
     "nav.launch": "Launch Console",
@@ -126,8 +124,6 @@ export const translations: Translations = {
   // Hindi Translation
   hi: {
     "nav.platform": "प्लेटफ़ॉर्म",
-    "nav.engine": "एआई इंजन",
-    "nav.integration": "एकीकरण",
     "nav.login": "लॉग इन",
     "nav.signup": "साइन अप",
     "nav.launch": "कंसोल चालू करें",
@@ -221,8 +217,6 @@ export const translations: Translations = {
 
   mr: {
     "nav.platform": "प्लॅटफॉर्म",
-    "nav.engine": "एआय इंजिन",
-    "nav.integration": "एकात्मता",
     "nav.login": "लॉगिन",
     "nav.signup": "साइन अप",
     "nav.launch": "कन्सोल चालू करा",
@@ -316,8 +310,6 @@ export const translations: Translations = {
 
   gu: {
     "nav.platform": "પ્લેટફોર્મ",
-    "nav.engine": "AI એન્જિન",
-    "nav.integration": "એકીકરણ",
     "nav.login": "લૉગિન",
     "nav.signup": "સાઇન અપ",
     "nav.launch": "કન્સોલ શરૂ કરો",
@@ -381,8 +373,6 @@ export const translations: Translations = {
 
   bn: {
     "nav.platform": "প্ল্যাটফর্ম",
-    "nav.engine": "এআই ইঞ্জিন",
-    "nav.integration": "ইন্টিগ্রেশন",
     "nav.login": "লগইন",
     "nav.signup": "সাইন আপ",
     "nav.launch": "কনসোল চালু করুন",
@@ -446,8 +436,6 @@ export const translations: Translations = {
 
   ta: {
     "nav.platform": "தளம்",
-    "nav.engine": "AI எஞ்சின்",
-    "nav.integration": "ஒருங்கிணைப்பு",
     "nav.login": "உள்நுழை",
     "nav.signup": "பதிவு செய்",
     "nav.launch": "கன்சோலைத் திற",
@@ -511,8 +499,6 @@ export const translations: Translations = {
 
   te: {
     "nav.platform": "వేదిక",
-    "nav.engine": "AI ఇంజిన్",
-    "nav.integration": "అనుసంధానం",
     "nav.login": "లాగిన్",
     "nav.signup": "సైన్ అప్",
     "nav.launch": "కన్సోల్ తెరవండి",
@@ -555,8 +541,6 @@ export const translations: Translations = {
 
   kn: {
     "nav.platform": "ವೇದಿಕೆ",
-    "nav.engine": "ಎಐ ಎಂಜಿನ್",
-    "nav.integration": "ಏಕೀಕರಣ",
     "nav.login": "ಲಾಗಿನ್",
     "nav.signup": "ಸೈನ್ ಅಪ್",
     "nav.launch": "ಕನ್ಸೋಲ್ ಪ್ರಾರಂಭಿಸಿ",
