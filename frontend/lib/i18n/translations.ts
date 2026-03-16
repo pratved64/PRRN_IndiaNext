@@ -37,6 +37,9 @@ export const translations: Translations = {
     "dash.deepfakeScan": "Deepfake Scanner",
     "dash.cyberHelp": "Cyber Help",
     "dash.allModules": "All Modules Active",
+    "dash.news": "Cyber Awareness",
+    "dash.news.offline": "Feed Offline",
+    "dash.news.source": "Source: The Hacker News",
     
     // Landing Hero
     "hero.badge": "AI Heuristic Module v2.4 Online",
@@ -138,6 +141,9 @@ export const translations: Translations = {
     "dash.deepfakeScan": "डीपफेक स्कैनर",
     "dash.cyberHelp": "साइबर सहायता",
     "dash.allModules": "सभी मॉड्यूल सक्रिय",
+    "dash.news": "साइबर जागरूकता",
+    "dash.news.offline": "फ़ीड ऑफ़लाइन",
+    "dash.news.source": "स्रोत: द हैकर न्यूज़",
     
     "hero.badge": "एआई ह्यूरिस्टिक मॉड्यूल v2.4 ऑनलाइन",
     "hero.title1": "जीरो-डे थ्रेट्स के खिलाफ",
@@ -230,6 +236,9 @@ export const translations: Translations = {
     "dash.deepfakeScan": "डीपफेक स्कॅनर",
     "dash.cyberHelp": "सायबर मदत",
     "dash.allModules": "सर्व मॉड्युल सक्रिय",
+    "dash.news": "सायबर जागरूकता",
+    "dash.news.offline": "फीड ऑफलाइन",
+    "dash.news.source": "स्रोत: द हॅकर न्यूज",
     
     "hero.badge": "एआय ह्युरिस्टिक मॉड्युल v2.4 ऑनलाइन",
     "hero.title1": "झिरो-डे धोक्यांविरुद्ध",
@@ -322,6 +331,9 @@ export const translations: Translations = {
     "dash.deepfakeScan": "ડીપફેક સ્કેનર",
     "dash.cyberHelp": "સાયબર મદદ",
     "dash.allModules": "તમામ મોડ્યુલ સક્રિય",
+    "dash.news": "સાયબર જાગૃતિ",
+    "dash.news.offline": "ફીડ ઑફલાઇન",
+    "dash.news.source": "સ્ત્રોત: ધ હેકર ન્યૂઝ",
     
     "hero.badge": "AI હ્યુરિસ્ટિક મોડ્યુલ v2.4 ઑનલાઇન",
     "hero.title1": "ઝીરો-ડે થ્રેટ્સ સામે",
@@ -384,6 +396,9 @@ export const translations: Translations = {
     "dash.deepfakeScan": "ডিপফেক স্ক্যানার",
     "dash.cyberHelp": "সাইবার সাহায্য",
     "dash.allModules": "সব মডিউল সক্রিয়",
+    "dash.news": "সাইবার সচেতনতা",
+    "dash.news.offline": "ফিড অফলাইন",
+    "dash.news.source": "সূত্র: দ্য হ্যাকার নিউজ",
     
     "hero.badge": "এআই হিউরিস্টিক মডিউল v2.4 অনলাইন",
     "hero.title1": "জিরো-ডে হুমকির বিরুদ্ধে",
@@ -446,6 +461,9 @@ export const translations: Translations = {
     "dash.deepfakeScan": "டீப்ஃபேக் ஸ்கேனர்",
     "dash.cyberHelp": "சைபர் உதவி",
     "dash.allModules": "அனைத்து தொகுதிகளும் செயல்பாட்டில் உள்ளன",
+    "dash.news": "சைபர் விழிப்புணர்வு",
+    "dash.news.offline": "ஊட்டம் ஆஃப்லைனில்",
+    "dash.news.source": "ஆதாரம்: தி ஹேக்கர் நியூஸ்",
     
     "hero.badge": "AI ஹூரிஸ்டிக் தொகுதி v2.4 ஆன்லைனில்",
     "hero.title1": "ஜீரோ-டே அச்சுறுத்தல்களுக்கு எதிரான",
@@ -508,6 +526,9 @@ export const translations: Translations = {
     "dash.deepfakeScan": "డీప్‌ఫేక్ స్కానర్",
     "dash.cyberHelp": "సైబర్ సహాయం",
     "dash.allModules": "అన్ని మాడ్యూల్స్ యాక్టివ్",
+    "dash.news": "సైబర్ అవేర్‌నెస్",
+    "dash.news.offline": "ఫీడ్ ఆఫ్‌లైన్",
+    "dash.news.source": "మూలం: ద హాకర్ న్యూస్",
     
     "hero.badge": "AI హ్యూరిస్టిక్ మాడ్యూల్ v2.4 ఆన్‌లైన్",
     "hero.title1": "జీరో-డే బెదిరింపులకు వ్యతిరేకంగా",
@@ -549,6 +570,9 @@ export const translations: Translations = {
     "dash.deepfakeScan": "ಡೀಪ್‌ಫೇಕ್ ಸ್ಕ್ಯಾನರ್",
     "dash.cyberHelp": "ಸೈಬರ್ ಸಹಾಯ",
     "dash.allModules": "ಎಲ್ಲಾ ಮಾಡ್ಯೂಲ್‌ಗಳು ಸಕ್ರಿಯ",
+    "dash.news": "ಸೈಬರ್ ಜಾಗೃತಿ",
+    "dash.news.offline": "ಫೀಡ್ ಆಫ್‌ಲೈನ್",
+    "dash.news.source": "ಮೂಲ: ದಿ ಹ್ಯಾಕರ್ ನ್ಯೂಸ್",
     
     "hero.badge": "AI ಹ್ಯೂರಿಸ್ಟಿಕ್ ಮಾಡ್ಯೂಲ್ v2.4 ಆನ್‌ಲೈನ್",
     "hero.title1": "ಶೂನ್ಯ-ದಿನದ ಬೆದರಿಕೆಗಳ ವಿರುದ್ಧ",

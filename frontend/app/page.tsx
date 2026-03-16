@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { useTheme } from "@/lib/ThemeContext";
 import LanguageSelector from "@/components/LanguageSelector";
 
 // 1. Defined product features tailored for the abhedya.sec platform
@@ -14,6 +15,7 @@ const FEATURES = [
 
 export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
+  const { theme, toggleTheme, themeStyle } = useTheme();
   const { t } = useLanguage();
 
   // Handle navbar blur effect on scroll
@@ -24,10 +26,14 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-200 font-sans selection:bg-cyan-900 selection:text-white relative overflow-hidden flex flex-col items-center pb-20">
-      
+    <div 
+      className="min-h-screen bg-neutral-950 text-neutral-200 font-sans selection:bg-cyan-900 selection:text-white relative overflow-hidden flex flex-col items-center pb-20"
+      style={themeStyle}
+    >
+
       {/* 2. Advanced Cybersecurity Background Animations */}
-      <style dangerouslySetInnerHTML={{__html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         @keyframes drift {
           from { background-position: 0 0; }
           to { background-position: -40px -40px; }
@@ -39,6 +45,14 @@ export default function LandingPage() {
         @keyframes nodeFloat {
           0%, 100% { transform: translate(0, 0); opacity: 0.1; }
           50% { transform: translate(30px, -30px); opacity: 0.3; }
+        }
+        @keyframes auraRed {
+          0%, 100% { opacity: 0.1; transform: scale(1); }
+          50% { opacity: 0.8; transform: scale(1.05); }
+        }
+        @keyframes auraBlue {
+          0%, 100% { opacity: 0.1; transform: scale(1); }
+          50% { opacity: 0.8; transform: scale(1.05); }
         }
         .bg-grid-animated {
           background-size: 40px 40px;
@@ -54,17 +68,39 @@ export default function LandingPage() {
           animation: binaryRain 40s linear infinite;
         }
         .network-node {
-          position: absolute; width: 6px; h-6;
+          position: absolute; width: 6px; height: 6px;
           background: rgba(6, 182, 212, 0.4); border-radius: 50%;
           box-shadow: 0 0 10px rgba(6, 182, 212, 0.6);
           pointer-events: none; animation: nodeFloat 10s ease-in-out infinite;
+        }
+        .cyber-lock-container {
+          position: absolute; inset: 0;
+          display: flex; align-items: center; justify-content: center;
+          pointer-events: none; z-index: 0;
+        }
+        .aura-red {
+          position: absolute; width: 80vw; height: 80vh;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(239, 68, 68, 0.05) 0%, transparent 60%);
+          animation: auraRed 10s ease-in-out infinite;
+        }
+        .aura-blue {
+          position: absolute; width: 80vw; height: 80vh;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(37, 99, 235, 0.05) 0%, transparent 60%);
+          animation: auraBlue 10s ease-in-out infinite;
+          animation-delay: 5s;
+        }
+        .padlock-icon {
+          width: 32vw; height: 32vw;
+          color: #0a0a0a;
         }
       `}} />
 
       {/* Background Layers */}
       <div className="absolute inset-0 bg-grid-animated pointer-events-none w-full h-full"></div>
       <div className="binary-rain pointer-events-none">{'0 1 1 0 1 0 0 1 0 1 1 0 1 1 0 '.repeat(300)}</div>
-      
+
       {/* Floating Nodes for depth */}
       {[...Array(6)].map((_, i) => (
         <div key={i} className="network-node pointer-events-none" style={{
@@ -75,10 +111,19 @@ export default function LandingPage() {
         }}></div>
       ))}
 
+      {/* New Background Animation Layer ( Interpretation D ) */}
+      <div className="cyber-lock-container">
+          <div className="aura-red"></div>
+          <div className="aura-blue"></div>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="padlock-icon text-cyan-400 opacity-60 pointer-events-none z-0">
+              <path d="M12 2c1.1 0 2 .9 2 2v4h4c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H6c-1.1 0-2-.9-2-2V10c0-1.1.9-2 2-2h4V4c0-1.1.9-2 2-2zM8 8V4c0-1.1.9-2 2-2s2 .9 2 2v4H8z" fill="none" stroke="currentColor" strokeWidth="1" />
+          </svg>
+      </div>
+
       {/* TOP NAVBAR */}
       <nav className={`fixed top-0 w-full z-50 transition-all duration-300 border-b ${scrolled ? 'bg-neutral-950/80 backdrop-blur-md border-white/10 py-3' : 'bg-transparent border-transparent py-5'}`}>
         <div className="max-w-7xl mx-auto px-6 md:px-12 flex justify-between items-center">
-          
+
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3 group">
             <div className="w-4 h-4 bg-white rounded-sm shadow-[0_0_10px_rgba(255,255,255,0.5)] group-hover:shadow-[0_0_15px_rgba(255,255,255,0.8)] transition-shadow"></div>
@@ -89,7 +134,19 @@ export default function LandingPage() {
 
           {/* Nav Links */}
           <div className="hidden md:flex items-center gap-8 text-sm font-mono uppercase tracking-widest text-neutral-400">
-            <Link href="#features" className="hover:text-white transition">{t('nav.platform')}</Link>
+            
+            {/* TOGGLE BUTTON REPLACING 'PLATFORM' */}
+            <button 
+              onClick={toggleTheme}
+              className="hover:text-white transition flex items-center gap-2 cursor-pointer focus:outline-none"
+            >
+              {theme === 'dark' ? (
+                <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg> LIGHT</>
+              ) : (
+                <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg> DARK</>
+              )}
+            </button>
+
             <Link href="#engine" className="hover:text-white transition">{t('nav.engine')}</Link>
             <Link href="#integration" className="hover:text-white transition">{t('nav.integration')}</Link>
           </div>
@@ -115,24 +172,24 @@ export default function LandingPage() {
 
       {/* MAIN HERO SECTION */}
       <main className="relative z-10 pt-40 pb-20 px-6 md:px-12 max-w-7xl mx-auto w-full">
-        
+
         <div className="text-center max-w-4xl mx-auto mb-20 space-y-4">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm text-xs font-mono text-cyan-400 uppercase tracking-widest mb-6 shadow-[0_0_10px_rgba(6,182,212,0.1)]">
             <span className="w-2.5 h-2.5 rounded-full bg-cyan-500 animate-pulse shadow-[0_0_10px_rgba(6,182,212,0.6)]"></span>
             {t('hero.badge')}
           </div>
-          
+
           <h1 className="text-5xl md:text-7xl font-light tracking-tight text-white mb-6 leading-tight">
             {t('hero.title1')} <br />
             <span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-white via-neutral-400 to-neutral-600">
               {t('hero.title2')}
             </span>
           </h1>
-          
+
           <p className="text-lg md:text-xl text-neutral-400 font-mono font-light max-w-2xl mx-auto mb-10 leading-relaxed">
             {t('hero.subtitle')}
           </p>
-          
+
           <div className="flex flex-col sm:flex-row justify-center gap-4 mt-8 pt-6">
             <Link href="/phishing" className="px-8 py-4 text-sm font-mono font-bold uppercase tracking-widest bg-white text-black rounded hover:bg-neutral-200 hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] transition-all flex items-center justify-center gap-3">
               <span className="text-lg">🛠️</span>
@@ -148,7 +205,7 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* 3. PLATFORM CORE CAPABILITIES SECTION (Replaces old Dashboard Data) */}
+        {/* 3. PLATFORM CORE CAPABILITIES SECTION */}
         <section id="features" className="mb-24 space-y-12 w-full relative">
           <header className="border-b border-white/10 pb-6 text-center md:text-left">
             <h2 className="text-sm font-mono uppercase text-neutral-400 tracking-widest flex items-center gap-2">
@@ -156,7 +213,7 @@ export default function LandingPage() {
               {t('feat.header')}
             </h2>
           </header>
-          
+
           <div className="grid md:grid-cols-3 gap-6">
             {FEATURES.map((feat) => (
               <div key={feat.id} className="bg-neutral-900/40 border border-white/5 p-8 rounded-xl backdrop-blur-sm transition-all duration-300 hover:border-cyan-500/30 hover:bg-neutral-900 group">
@@ -172,8 +229,8 @@ export default function LandingPage() {
         <section id="engine" className="mb-24 grid md:grid-cols-5 gap-12 items-center">
           <div className="md:col-span-2 space-y-6">
             <label className="text-xs font-mono uppercase text-cyan-400 tracking-widest flex items-center gap-2">
-                <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse"></span>
-                {t('eng.label')}
+              <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse"></span>
+              {t('eng.label')}
             </label>
             <h3 className="text-4xl font-light text-white leading-tight uppercase">{t('eng.title1')}<br /><span className="font-bold">{t('eng.title2')}</span></h3>
             <p className="text-neutral-400 font-mono text-sm leading-relaxed">{t('eng.desc')}</p>
