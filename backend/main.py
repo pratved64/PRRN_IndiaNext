@@ -99,6 +99,10 @@ async def global_exception_handler(request: Request, exc: Exception):
 from pipelines.phishing.api_routes import router as phishing_router
 app.include_router(phishing_router)
 
+# Include the URL Analysis router
+from pipelines.url.url_routes import router as url_router
+app.include_router(url_router)
+
 from pipelines.sentinel_behavior.main import router as sentinel_router
 app.include_router(sentinel_router, prefix="/api/sentinel", tags=["Sentinel"])
 
