@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { useTheme } from "@/lib/ThemeContext";
 import LanguageSelector from "@/components/LanguageSelector";
+import CyberThreatTimeline from '@/components/CyberThreatTimeline';
+import Footer from "@/components/Footer";
 
 // 1. Defined product features tailored for the abhedya.sec platform
 const FEATURES = [
@@ -334,7 +336,7 @@ export default function LandingPage() {
             <div className="bg-neutral-950 rounded md p-6 font-mono text-[11px] md:text-xs text-neutral-500 space-y-3 leading-loose">
               <p className="text-cyan-400">{`[09:21:04] PHISHING_ENGINE_ANALYSIS :: payload=email001`}</p>
               <p>{`[09:21:05] Module: Tone_Analyzer_Urgency //Detecting_Hindi_Window_Detected`}</p>
-              <p className="text-white bg-red-950/20 p-2 border border-red-500/30 rounded">{`[Flag] कृत्रिम_वर्किंग_विंडो_Detected :: artificially creating urgency with 24-hour window.`}</p>
+              <p className="text-white bg-red-950/20 p-2 border border-red-500/30 rounded">{`[Flag] कृत्रिम_वर्कING_विंडो_Detected :: artificially creating urgency with 24-hour window.`}</p>
               <p>{`[09:21:05] Module: Domain_ mismatch_Analyzer`}</p>
               <p className="text-white bg-red-950/20 p-2 border border-red-500/30 rounded">{`[Flag] Mimic Detected :: reply-to address 'admin@paypal-support-web.com' is not verified domain.`}</p>
               <p className="text-red-400 text-sm font-bold">{`[RESULT] FLAG_CRITICAL. AUTOMATED_QUARANTINE.`}</p>
@@ -342,23 +344,13 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* 5. ECOSYSTEM INTEGRATION SECTION */}
-        <section id="integration">
-          <header className="mb-12 border-b border-white/10 pb-6 text-center">
-            <h2 className="text-sm font-mono uppercase text-neutral-400 tracking-widest flex items-center gap-2 justify-center">
-              {t('int.header')}
-            </h2>
-          </header>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {['SIEM', 'SOAR', 'EAP', 'IDP'].map((tool) => (
-              <div key={tool} className="bg-neutral-900 border border-white/5 p-6 rounded-md text-center text-neutral-400 font-mono text-sm tracking-widest uppercase hover:text-white hover:border-cyan-500/20 transition group">
-                {tool} <span className="text-cyan-400 group-hover:shadow-[0_0_10px_rgba(6,182,212,1)]">•</span>
-              </div>
-            ))}
-          </div>
+        {/* CYBER THREAT TIMELINE */}
+        <section className="w-full max-w-7xl mx-auto px-6 md:px-12 mb-20">
+          <CyberThreatTimeline />
         </section>
 
       </main>
+      <Footer />
     </div>
   );
 }
