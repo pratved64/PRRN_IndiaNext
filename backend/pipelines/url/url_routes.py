@@ -1,3 +1,4 @@
+import re
 import httpx
 import anyio
 from fastapi import APIRouter, HTTPException, Request
@@ -36,6 +37,23 @@ def translate_risk_score(score: float) -> str:
         return "Low Risk: Looks Safe"
 
 
+_URL_TOKENIZER_PATTERN = re.compile(r"[./:-]+")
+
+
+def _preprocess_url_for_model(url: str) -> str:
+    """
+    Lightweight URL normalizer for the phishing model:
+      - Replace '.', '/', ':', '-' (including runs of them) with a single space
+      - Collapse any consecutive whitespace to a single space
+      - Strip leading/trailing spaces
+    """
+    # Replace URL separators with a single space
+    text = _URL_TOKENIZER_PATTERN.sub(" ", url)
+    # Collapse any extra spaces that might appear
+    text = " ".join(text.split())
+    return text
+
+
 @router.post("/url", response_model=UrlResponse)
 async def analyze_url_endpoint(request_data: UrlRequest, request: Request):
     """
@@ -54,15 +72,16 @@ async def analyze_url_endpoint(request_data: UrlRequest, request: Request):
     try:
         resolved_url = await resolve_url(original_url)
     except ValueError as e:
+        # True validation / SSRF block → surface as 400
         raise HTTPException(status_code=400, detail=str(e))
-    except httpx.TimeoutException:
-        raise HTTPException(status_code=408, detail="Timeout: The URL did not respond within 3 seconds.")
-    except httpx.RequestError as e:
-        raise HTTPException(status_code=400, detail=f"Could not reach URL: {str(e)}")
+    except (httpx.TimeoutException, httpx.RequestError):
+        # Network/timeout issues: fall back to analyzing the original URL string
+        resolved_url = original_url
 
     # Step 2: Run inference on the resolved URL (offloaded to thread pool per RULES.md)
     try:
-        result = await anyio.to_thread.run_sync(analyze_email, resolved_url, model, tokenizer)
+        clean_text = _preprocess_url_for_model(resolved_url)
+        result = await anyio.to_thread.run_sync(analyze_email, clean_text, model, tokenizer)
 
         risk_score = result["risk_score"]
 
