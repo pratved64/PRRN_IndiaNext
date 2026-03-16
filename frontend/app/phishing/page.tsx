@@ -1,18 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import ExplainabilityCard from "@/components/ExplainabilityCard";
 import DashboardNav from "@/components/DashboardNav";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { useTheme } from "@/lib/ThemeContext";
-
-interface ThreatResult {
-  threatType: string;
-  riskLevel: "None" | "Low" | "Medium" | "High" | "Critical";
-  confidence: number;
-  explanations: string[];
-  recommendation: string;
-}
+import { analyzePhishingText, ThreatResult } from "@/lib/api";
 
 export default function PhishingAnalyzer() {
   const [inputText, setInputText] = useState("");
@@ -21,45 +14,39 @@ export default function PhishingAnalyzer() {
   const { theme, toggleTheme, themeStyle } = useTheme();
   const { t } = useLanguage();
   
-  // Simulated telemetry for the UI
-  const [sessionId, setSessionId] = useState("");
-
-  useEffect(() => {
-    // Generate a fake session ID on load
-    setSessionId(`SEC-${Math.random().toString(36).substring(2, 8).toUpperCase()}`);
-  }, []);
-
   const handleAnalyze = async (scenario: "threat" | "safe" = "threat") => {
     if (!inputText.trim()) return;
     
     setIsAnalyzing(true);
     setResult(null);
 
-    // Simulate AI API Call
-    setTimeout(() => {
-      if (scenario === "threat") {
-        setResult({
-          threatType: "Spear Phishing / Credential Harvesting",
-          riskLevel: "Critical",
-          confidence: 98,
-          explanations: [
-            "Urgency indicator: Language pressures user with an artificial 24-hour deadline.",
-            "Domain spoofing: Reply-to address 'admin@paypal-support-web.com' is not an official domain.",
-            "Malicious payload: Embedded URL redirects through two known malicious obfuscation gateways."
-          ],
-          recommendation: "Quarantine email across all organizational inboxes. Block sender IP. Do not click links."
-        });
+    try {
+      if (scenario === "safe") {
+        // Since backend requires actual text, we can still do a mock or just send safe text
+        // But the prompt wants actual backend calls. We'll send the input text to the backend.
+        const res = await analyzePhishingText(inputText);
+        // If the user clicked "Simulate Safe" we might just want to show a safe result regardless, 
+        // to maintain the UI feature, or we can just run it against the backend. 
+        // We will run it against the backend for authenticity.
+        setResult(res);
       } else {
-        setResult({
-          threatType: "Standard Communication",
-          riskLevel: "None",
-          confidence: 99,
-          explanations: [],
-          recommendation: "No action required. Communication appears benign."
-        });
+        const res = await analyzePhishingText(inputText);
+        setResult(res);
       }
+    } catch (error: unknown) {
+      console.error(error);
+      setResult({
+        threatType: "Analysis Error",
+        riskLevel: "None",
+        confidence: 0,
+        explanations: [
+          error instanceof Error ? error.message : "Failed to connect to the backend",
+        ],
+        recommendation: "Please try again later.",
+      });
+    } finally {
       setIsAnalyzing(false);
-    }, 2500); // Slightly longer to show off the scanning effects
+    }
   };
 
   const clearInput = () => {

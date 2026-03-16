@@ -8,6 +8,8 @@ interface ThreatResult {
   confidence: number;
   explanations: string[];
   recommendation: string;
+  heatmapBase64?: string;
+  attentionMap?: number[];
 }
 
 export default function ExplainabilityCard({ result }: { result: ThreatResult }) {
@@ -18,6 +20,20 @@ export default function ExplainabilityCard({ result }: { result: ThreatResult })
         wrapper: "border-red-500/50 bg-red-950/20",
         header: "border-red-500/50 bg-red-500/10 text-red-400",
         icon: "🔴",
+      };
+    }
+    if (level === "Medium") {
+      return {
+        wrapper: "border-amber-400/50 bg-amber-950/10",
+        header: "border-amber-400/50 bg-amber-500/10 text-amber-300",
+        icon: "⚠️",
+      };
+    }
+    if (level === "Low") {
+      return {
+        wrapper: "border-cyan-400/40 bg-cyan-950/10",
+        header: "border-cyan-400/40 bg-cyan-500/10 text-cyan-200",
+        icon: "🌀",
       };
     }
     if (level === "None" || level === "Safe") {
@@ -72,6 +88,38 @@ export default function ExplainabilityCard({ result }: { result: ThreatResult })
             <li className="text-green-400">No suspicious indicators detected in the payload.</li>
           )}
         </ul>
+
+        {result.heatmapBase64 && (
+          <div className="mb-8">
+            <h4 className="text-xs font-mono uppercase text-gray-400 mb-2">Attention Heatmap</h4>
+            <img
+              src={`data:image/jpeg;base64,${result.heatmapBase64}`}
+              alt="Attention heatmap"
+              className="w-full max-h-64 object-contain rounded border border-white/10 bg-black/30"
+            />
+          </div>
+        )}
+
+        {!result.heatmapBase64 && result.attentionMap && result.attentionMap.length > 0 && (
+          <div className="mb-8">
+            <h4 className="text-xs font-mono uppercase text-gray-400 mb-2">Attention Heatmap (Audio)</h4>
+            <div className="h-24 bg-black/30 border border-white/10 rounded flex items-end gap-[2px] p-2 overflow-hidden">
+              {result.attentionMap.slice(0, 120).map((v, i) => {
+                const norm = Math.max(0, Math.min(1, Math.abs(v)));
+                return (
+                  <div
+                    key={i}
+                    style={{
+                      height: `${norm * 100}%`,
+                      width: "3px",
+                      background: "linear-gradient(to top, rgba(14,165,233,0.25), rgba(14,165,233,0.9))",
+                    }}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Recommendation */}
         <div className="bg-black/40 border border-white/10 p-4 rounded-md">

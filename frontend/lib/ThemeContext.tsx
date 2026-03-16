@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useState, ReactNode } from "react";
 
 type Theme = "dark" | "light";
 
@@ -14,14 +14,13 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
-  const [theme, setThemeState] = useState<Theme>("dark");
-
-  useEffect(() => {
-    const saved = localStorage.getItem("abhedya_theme") as Theme;
-    if (saved === "light" || saved === "dark") {
-      setThemeState(saved);
+  const [theme, setThemeState] = useState<Theme>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("abhedya_theme") as Theme;
+      if (saved === "light" || saved === "dark") return saved;
     }
-  }, []);
+    return "dark";
+  });
 
   const setTheme = (t: Theme) => {
     setThemeState(t);

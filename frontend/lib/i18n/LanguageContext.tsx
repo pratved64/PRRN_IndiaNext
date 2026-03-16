@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useState, ReactNode } from "react";
 import { SupportedLanguage, translations } from "./translations";
 
 interface LanguageContextType {
@@ -13,15 +13,13 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   // Try to load persisted language on client side hook, default to en
-  const [language, setLanguageState] = useState<SupportedLanguage>('en');
-
-  useEffect(() => {
-    // Only access localStorage strictly in exactly the client side browser frame
-    const saved = localStorage.getItem("abhedya_lang") as SupportedLanguage;
-    if (saved && translations[saved]) {
-      setLanguageState(saved);
+  const [language, setLanguageState] = useState<SupportedLanguage>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("abhedya_lang") as SupportedLanguage;
+      if (saved && translations[saved]) return saved;
     }
-  }, []);
+    return "en";
+  });
 
   const setLanguage = (lang: SupportedLanguage) => {
     setLanguageState(lang);

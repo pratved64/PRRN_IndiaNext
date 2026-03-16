@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import Link from "next/link";
+import React from "react";
 import DashboardNav from "@/components/DashboardNav";
 import NewsWidget from "@/components/NewsWidget";
 import { useTheme } from "@/lib/ThemeContext";
@@ -29,12 +28,7 @@ const riskBadge: Record<string, string> = {
 };
 
 export default function Dashboard() {
-  const [sessionId, setSessionId] = useState("");
   const { theme, toggleTheme, themeStyle } = useTheme();
-
-  useEffect(() => {
-    setSessionId(`SYS-${Math.random().toString(36).substring(2, 8).toUpperCase()}`);
-  }, []);
 
   return (
     <div 
