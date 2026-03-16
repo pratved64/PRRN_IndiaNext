@@ -5,7 +5,7 @@ import soundfile as sf
 import numpy as np
 import io
 from pydub import AudioSegment
-from load_audio_model import processor, model, classifier, DEVICE
+from .load_audio_model import processor, model, classifier, DEVICE
 TARGET_SR = 16000
 def predict_audio(audio_path: str) -> dict:
     if audio_path.lower().endswith(".mp3"):

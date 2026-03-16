@@ -8,6 +8,9 @@ load_dotenv()
 
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, ViTForImageClassification, ViTImageProcessor
 from contextlib import asynccontextmanager
+from fastapi import FastAPI, Request, Response
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 import os
 import sys
 import time
@@ -88,7 +91,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 from pipelines.phishing.api_routes import router as phishing_router
 app.include_router(phishing_router)
 
-from sentinel_behavior.main import router as sentinel_router
+from pipelines.sentinel_behavior.main import router as sentinel_router
 app.include_router(sentinel_router, prefix="/api/sentinel", tags=["Sentinel"])
 
 from pipelines.deepfake_audio.audio_api_routes import router as audio_api_router
