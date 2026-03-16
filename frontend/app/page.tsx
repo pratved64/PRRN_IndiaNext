@@ -55,6 +55,25 @@ export default function LandingPage() {
           50% { opacity: 0.8; transform: scale(1.05); }
         }
 
+        /* 3D LOGO KEYFRAMES */
+        @keyframes gyro1 {
+          0% { transform: rotateX(60deg) rotateY(0deg) rotateZ(0deg); }
+          100% { transform: rotateX(60deg) rotateY(360deg) rotateZ(360deg); }
+        }
+        @keyframes gyro2 {
+          0% { transform: rotateX(120deg) rotateY(0deg) rotateZ(0deg); }
+          100% { transform: rotateX(120deg) rotateY(-360deg) rotateZ(-360deg); }
+        }
+
+        /* ACTIVE CYBER RADAR KEYFRAMES */
+        @keyframes radar-spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        @keyframes pulse-ring {
+          0% { transform: scale(0.8); opacity: 0.5; }
+          100% { transform: scale(2); opacity: 0; }
+        }
 
         .bg-grid-animated {
           background-size: 40px 40px;
@@ -75,27 +94,39 @@ export default function LandingPage() {
           box-shadow: 0 0 10px rgba(6, 182, 212, 0.6);
           pointer-events: none; animation: nodeFloat 10s ease-in-out infinite;
         }
-        .cyber-lock-container {
-          position: absolute; inset: 0;
-          display: flex; align-items: center; justify-content: center;
+        
+        /* RADAR SCANNER STYLES */
+        .radar-container {
+          position: absolute; top: 20%; left: 50%;
+          transform: translate(-50%, -50%);
+          width: 800px; height: 800px;
           pointer-events: none; z-index: 0;
+          opacity: 0.15;
         }
-        .aura-red {
-          position: absolute; width: 80vw; height: 80vh;
-          border-radius: 50%;
-          background: radial-gradient(circle, rgba(239, 68, 68, 0.05) 0%, transparent 60%);
-          animation: auraRed 10s ease-in-out infinite;
+        .radar-sweep {
+          position: absolute; inset: 0; border-radius: 50%;
+          background: conic-gradient(from 0deg, transparent 70%, rgba(6, 182, 212, 0.8) 100%);
+          animation: radar-spin 4s linear infinite;
         }
-        .aura-blue {
-          position: absolute; width: 80vw; height: 80vh;
-          border-radius: 50%;
-          background: radial-gradient(circle, rgba(37, 99, 235, 0.05) 0%, transparent 60%);
-          animation: auraBlue 10s ease-in-out infinite;
-          animation-delay: 5s;
+        .radar-grid {
+          position: absolute; inset: 0; border-radius: 50%;
+          border: 1px solid rgba(6, 182, 212, 0.5);
+          background-image: 
+            linear-gradient(to right, transparent 49.5%, rgba(6, 182, 212, 0.5) 49.5%, rgba(6, 182, 212, 0.5) 50.5%, transparent 50.5%),
+            linear-gradient(to bottom, transparent 49.5%, rgba(6, 182, 212, 0.5) 49.5%, rgba(6, 182, 212, 0.5) 50.5%, transparent 50.5%);
         }
-        .padlock-icon {
-          width: 32vw; height: 32vw;
-          color: #0a0a0a;
+        .radar-ring {
+          position: absolute; top: 50%; left: 50%;
+          width: 100%; height: 100%;
+          transform: translate(-50%, -50%);
+          border-radius: 50%; border: 1px solid rgba(6, 182, 212, 0.5);
+        }
+        .radar-ring:nth-child(1) { width: 33%; height: 33%; }
+        .radar-ring:nth-child(2) { width: 66%; height: 66%; }
+        .radar-pulse {
+          position: absolute; inset: 0; border-radius: 50%;
+          border: 2px solid rgba(239, 68, 68, 0.8);
+          animation: pulse-ring 3s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
         }
       `}} />
 
@@ -120,13 +151,13 @@ export default function LandingPage() {
         }}></div>
       ))}
 
-      {/* Background Animation Layer */}
-      <div className="cyber-lock-container">
-          <div className="aura-red"></div>
-          <div className="aura-blue"></div>
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="padlock-icon text-cyan-400 opacity-60 pointer-events-none z-0">
-              <path d="M12 2c1.1 0 2 .9 2 2v4h4c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H6c-1.1 0-2-.9-2-2V10c0-1.1.9-2 2-2h4V4c0-1.1.9-2 2-2zM8 8V4c0-1.1.9-2 2-2s2 .9 2 2v4H8z" fill="none" stroke="currentColor" strokeWidth="1" />
-          </svg>
+      {/* ANIMATED SECURITY RADAR BACKGROUND */}
+      <div className="radar-container">
+        <div className="radar-grid"></div>
+        <div className="radar-ring"></div>
+        <div className="radar-ring"></div>
+        <div className="radar-sweep"></div>
+        <div className="radar-pulse"></div>
       </div>
 
       {/* TOP NAVBAR */}
@@ -136,37 +167,20 @@ export default function LandingPage() {
           {/* 3D Chatbot AI Core Logo */}
           <Link href="/" className="flex items-center gap-4 group cursor-pointer">
             <div className="relative w-10 h-10 flex items-center justify-center perspective-[1000px]">
-              
-              {/* Outer 3D Gyroscope Ring 1 */}
-              <div 
-                className="absolute w-full h-full rounded-full border-t-2 border-r-2 border-cyan-400/80 shadow-[0_0_15px_rgba(6,182,212,0.5)] group-hover:border-cyan-300 group-hover:shadow-[0_0_25px_rgba(6,182,212,0.8)] transition-all duration-300" 
-                style={{ animation: 'gyro1 5s linear infinite' }}>
-              </div>
-              
-              {/* Outer 3D Gyroscope Ring 2 */}
-              <div 
-                className="absolute w-full h-full rounded-full border-b-2 border-l-2 border-blue-600/80 shadow-[0_0_15px_rgba(37,99,235,0.5)] group-hover:border-blue-400 transition-all duration-300" 
-                style={{ animation: 'gyro2 7s linear infinite' }}>
-              </div>
-              
-              {/* Inner Glowing AI Pupil / Core */}
+              <div className="absolute w-full h-full rounded-full border-t-2 border-r-2 border-cyan-400/80 shadow-[0_0_15px_rgba(6,182,212,0.5)] group-hover:border-cyan-300 transition-all duration-300" style={{ animation: 'gyro1 5s linear infinite' }}></div>
+              <div className="absolute w-full h-full rounded-full border-b-2 border-l-2 border-blue-600/80 shadow-[0_0_15px_rgba(37,99,235,0.5)] group-hover:border-blue-400 transition-all duration-300" style={{ animation: 'gyro2 7s linear infinite' }}></div>
               <div className="absolute w-4 h-4 rounded-full bg-gradient-to-tr from-cyan-400 to-white shadow-[0_0_20px_rgba(255,255,255,0.9)] core-pulse group-hover:scale-125 transition-transform duration-300 flex items-center justify-center">
                  <div className="w-1.5 h-1.5 bg-white rounded-full blur-[1px]"></div>
               </div>
             </div>
-
             <span className="text-2xl font-light tracking-widest text-white uppercase group-hover:text-cyan-50 transition-colors drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]">
               abhedya<span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">.sec</span>
             </span>
           </Link>
 
-          {/* Nav Links (ADDED md:ml-12 lg:ml-24 HERE TO CREATE THE GAP) */}
+          {/* Nav Links */}
           <div className="hidden md:flex items-center gap-8 text-sm font-mono uppercase tracking-widest text-neutral-400 md:ml-12 lg:ml-24">
-            
-            <button 
-              onClick={toggleTheme}
-              className="hover:text-white transition flex items-center gap-2 cursor-pointer focus:outline-none"
-            >
+            <button onClick={toggleTheme} className="hover:text-white transition flex items-center gap-2 cursor-pointer focus:outline-none">
               {theme === 'dark' ? (
                 <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg> LIGHT</>
               ) : (
@@ -229,6 +243,51 @@ export default function LandingPage() {
           </div>
         </div>
 
+        {/* CYBERSECURITY AWARENESS IMAGE SECTION */}
+        <section id="awareness" className="mb-24 w-full relative">
+          <div className="bg-[#050505] border border-white/10 rounded-2xl p-6 md:p-10 shadow-[0_0_50px_rgba(0,0,0,0.8)]">
+            <div className="flex flex-col md:flex-row gap-10 items-center">
+              
+              <div className="flex-1 space-y-6">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-red-500/10 border border-red-500/20 text-[10px] font-mono font-bold text-red-400 uppercase tracking-widest">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
+                  Tactical Intel brief
+                </div>
+                <h2 className="text-3xl md:text-4xl font-light text-white leading-tight">
+                  You Are The <br/><span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-orange-500">Human Firewall.</span>
+                </h2>
+                <p className="text-neutral-400 text-sm leading-relaxed font-mono">
+                  Over 90% of all cyber breaches start with human error. No amount of encryption can protect a system if a user unknowingly grants access through a malicious link.
+                </p>
+                <ul className="space-y-3 font-mono text-xs text-neutral-300 mt-4">
+                  <li className="flex items-center gap-3"><span className="text-cyan-400">›</span> Verify sender domains meticulously.</li>
+                  <li className="flex items-center gap-3"><span className="text-cyan-400">›</span> Beware of false urgency or panic.</li>
+                  <li className="flex items-center gap-3"><span className="text-cyan-400">›</span> Report suspicious links instantly.</li>
+                </ul>
+              </div>
+
+              <div className="flex-1 w-full relative group">
+                <div className="absolute -top-2 -left-2 w-6 h-6 border-t-2 border-l-2 border-cyan-500/50 z-10"></div>
+                <div className="absolute -top-2 -right-2 w-6 h-6 border-t-2 border-r-2 border-cyan-500/50 z-10"></div>
+                <div className="absolute -bottom-2 -left-2 w-6 h-6 border-b-2 border-l-2 border-cyan-500/50 z-10"></div>
+                <div className="absolute -bottom-2 -right-2 w-6 h-6 border-b-2 border-r-2 border-cyan-500/50 z-10"></div>
+
+                <div className="relative aspect-video rounded-lg overflow-hidden border border-white/10 bg-neutral-900 shadow-[0_0_30px_rgba(6,182,212,0.15)]">
+                  {/* Genuine Tactical Cybersecurity Image */}
+                  <img 
+                    src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=1000" 
+                    alt="Cyber Defense Intelligence" 
+                    className="w-full h-full object-cover opacity-80 transition-opacity duration-500 group-hover:opacity-100"
+                  />
+                  {/* Subtle Scanline Overlay */}
+                  <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] z-10 pointer-events-none bg-[length:100%_2px,3px_100%]"></div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </section>
+
         {/* 3. PLATFORM CORE CAPABILITIES SECTION */}
         <section id="features" className="mb-24 space-y-12 w-full relative">
           <header className="border-b border-white/10 pb-6 text-center md:text-left">
@@ -271,7 +330,6 @@ export default function LandingPage() {
             <p className="text-neutral-400 font-mono text-sm leading-relaxed">{t('eng.desc')}</p>
           </div>
 
-          {/* Code/Sandbox Aesthetic */}
           <div className="md:col-span-3 bg-neutral-900 border border-white/10 rounded-lg p-1 transition hover:border-cyan-500/20 shadow-inner">
             <div className="bg-neutral-950 rounded md p-6 font-mono text-[11px] md:text-xs text-neutral-500 space-y-3 leading-loose">
               <p className="text-cyan-400">{`[09:21:04] PHISHING_ENGINE_ANALYSIS :: payload=email001`}</p>
