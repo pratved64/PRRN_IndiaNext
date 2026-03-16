@@ -19,8 +19,10 @@ class LinearClassifier(torch.nn.Module):
     def forward(self, x):
         return self.fc(self.dropout(x))
 
-path_to_classifier = os.path.join(os.path.dirname(__file__), "classifier.pt")
-ckpt       = torch.load(path_to_classifier, map_location=DEVICE)
+
+import os
+ckpt_path  = os.path.join(os.path.dirname(__file__), "classifier.pt")
+ckpt       = torch.load(ckpt_path, map_location=DEVICE)
 classifier = LinearClassifier(ckpt["input_dim"]).to(DEVICE)
 classifier.load_state_dict(ckpt["model_state"])
 classifier.eval()
