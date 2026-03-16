@@ -63,13 +63,11 @@ def preprocess_email(raw_input: str) -> tuple[torch.Tensor, list[str]]:
 def custom_forward(inputs: torch.Tensor):
     """
     Custom forward function for Captum.
-    Captum passes in embeddings directly as continuous vectors, 
-    so we need to skip the embedding layer lookup.
+    We pass input_ids directly, and return the logits for the positive class.
     """
-    # model(inputs_embeds=...) skips the internal embedding layer
-    outputs = model(inputs_embeds=inputs)
+    # inputs is input_ids of shape [batch, seq_len]
+    outputs = model(input_ids=inputs)
     # Return the logits for the positive class (phishing = index 1)
-    # cybersectony/phishing-email-detection-distilbert_v2.4.1 typically uses index 1 for phishing
     return outputs.logits
 
 def get_word_attributions(attributions: torch.Tensor, tokens: list[str]) -> list[dict]:
@@ -134,19 +132,18 @@ def analyze_email(raw_input: str):
         risk_score = probabilities[0][1].item()
         
     # 3. Explainability (Captum)
-    # Step 3.2: Initialize LayerIntegratedGradients pointing at the embedding layer
-    lig = LayerIntegratedGradients(custom_forward, model.distilbert.embeddings)
+    # Step 3.2: Initialize LayerIntegratedGradients pointing at the word embeddings layer
+    # For DistilBERT, it is model.distilbert.embeddings.word_embeddings
+    lig = LayerIntegratedGradients(custom_forward, model.distilbert.embeddings.word_embeddings)
     
-    # Get the actual embeddings to use as input baseline
-    input_embeds = model.distilbert.embeddings(input_tensor)
-    
-    # Create baseline (zeros or mask tokens) - zeros of same shape are standard
-    baseline = torch.zeros_like(input_embeds)
+    # We pass the input_ids (input_tensor) directly. The baseline is a tensor of zeros, 
+    # which usually corresponds to the [PAD] token in HuggingFace tokenizers.
+    baseline = torch.zeros_like(input_tensor)
     
     # Step 3.3: Calculate Attributions
     # Target=1 means we want attribution relative to predicting "Phishing"
     attributions, delta = lig.attribute(
-        inputs=input_embeds,
+        inputs=input_tensor,
         baselines=baseline,
         target=1,
         return_convergence_delta=True

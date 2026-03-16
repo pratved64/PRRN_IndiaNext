@@ -6,7 +6,7 @@ from typing import List
 # In a real app we might put the route in routes/phishing.py and logic here, 
 # but per instructions, we are restricting work to pipelines/phishing.py 
 # so we will add the router here for easy importing to main.py later.
-from pipelines.phishing import analyze_email
+from pipelines.phishing.phishing import analyze_email
 
 router = APIRouter(prefix="/analyze", tags=["Phishing Analysis"])
 

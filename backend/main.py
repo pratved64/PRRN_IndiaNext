@@ -24,6 +24,9 @@ app.add_middleware(
 
 # qdrant = QdrantClient(host="localhost", port=6333)
 
+# Include the Phishing Pipeline router
+from pipelines.api_routes import router as phishing_router
+app.include_router(phishing_router)
 
 @app.get("/api/health")
 def health_check():

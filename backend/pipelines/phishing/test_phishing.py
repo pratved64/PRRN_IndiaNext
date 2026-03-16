@@ -1,7 +1,7 @@
 import asyncio
-from pipelines.phishing import analyze_email
+from pipelines.phishing.phishing import analyze_email
 import json
-
+import traceback
 def run_tests():
     print("--- Starting Phase 5 Tests ---")
 
@@ -21,7 +21,8 @@ def run_tests():
         print(f"Risk Score: {res1['risk_score']:.4f}")
         print(f"Top 3 Attributions: {res1['highlighted_words'][:3]}")
     except Exception as e:
-        print(f"Failed: {e}")
+        print(f"Failed Test 1:")
+        traceback.print_exc()
 
     # Step 5.2: The Malicious Test
     print("\n[Test 2: Malicious Email]")
@@ -37,7 +38,8 @@ def run_tests():
         print(f"Risk Score: {res2['risk_score']:.4f}")
         print(f"Top 3 Attributions: {res2['highlighted_words'][:3]}")
     except Exception as e:
-        print(f"Failed: {e}")
+        print(f"Failed Test 2:")
+        traceback.print_exc()
 
     # Step 5.3: The Overload Test
     print("\n[Test 3: Overload Email (> 512 tokens)]")
@@ -49,7 +51,8 @@ def run_tests():
         print("Success: Truncation logic worked without index/tensor errors.")
         print(f"Top 3 Attributions: {res3['highlighted_words'][:3]}")
     except Exception as e:
-        print(f"Failed: {e}")
+        print(f"Failed Test 3:")
+        traceback.print_exc()
 
 if __name__ == "__main__":
     run_tests()
