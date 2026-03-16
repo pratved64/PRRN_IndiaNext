@@ -5,7 +5,7 @@ import soundfile as sf
 import numpy as np
 import io
 from pydub import AudioSegment
-from load_audio_model import processor, model, classifier, DEVICE
+from .load_audio_model import processor, model, classifier, DEVICE
 TARGET_SR = 16000
 def predict_audio(audio_path: str) -> dict:
     if audio_path.lower().endswith(".mp3"):
@@ -27,6 +27,7 @@ def predict_audio(audio_path: str) -> dict:
         return_tensors="pt"
     ).input_values.to(DEVICE)
     with torch.no_grad():
+
         outputs = model(input_values, output_hidden_states=True, output_attentions=True)
         embedding = outputs.hidden_states[-1].mean(dim=1).squeeze()
         logits = classifier(embedding.unsqueeze(0))
