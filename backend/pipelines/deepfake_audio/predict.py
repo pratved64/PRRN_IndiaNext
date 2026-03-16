@@ -5,11 +5,7 @@ import soundfile as sf
 import numpy as np
 import io
 from pydub import AudioSegment
-<<<<<<< HEAD
 from .load_audio_model import processor, model, classifier, DEVICE
-=======
-from load_audio_model import processor, model, classifier, DEVICE
->>>>>>> ffb8694 (added audio pipeline)
 TARGET_SR = 16000
 def predict_audio(audio_path: str) -> dict:
     if audio_path.lower().endswith(".mp3"):
@@ -31,7 +27,7 @@ def predict_audio(audio_path: str) -> dict:
         return_tensors="pt"
     ).input_values.to(DEVICE)
     with torch.no_grad():
-<<<<<<< HEAD
+
         outputs = model(input_values, output_hidden_states=True, output_attentions=True)
         embedding = outputs.hidden_states[-1].mean(dim=1).squeeze()
         logits = classifier(embedding.unsqueeze(0))
@@ -58,21 +54,3 @@ def predict_audio(audio_path: str) -> dict:
                      "Medium"   if fake_prob > 0.4 else "Low"),
         "attention_map": attn_map
     }
-=======
-        outputs=model(input_values, output_hidden_states=True)
-        embedding=outputs.hidden_states[-1].mean(dim=1).squeeze()
-        logits=classifier(embedding.unsqueeze(0))
-        probs=torch.softmax(logits, dim=1).squeeze()
-    real_prob=round(probs[0].item(), 3)
-    fake_prob=round(probs[1].item(), 3)
-    label="AI Generated" if fake_prob >= 0.5 else "Real Human"
-    confidence=fake_prob if fake_prob >= 0.5 else real_prob
-    return {
-        "label":      label,
-        "confidence": confidence,
-        "real_prob":  real_prob,
-        "fake_prob":  fake_prob,
-        "severity":   ("Critical" if fake_prob > 0.9 else
-                       "High"     if fake_prob > 0.7 else
-                       "Medium"   if fake_prob > 0.4 else "Low")}
->>>>>>> ffb8694 (added audio pipeline)
