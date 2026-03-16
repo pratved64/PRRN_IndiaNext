@@ -6,7 +6,34 @@ from fastapi.middleware.cors import CORSMiddleware
 # from sqlalchemy import create_engine
 # from sqlalchemy.orm import sessionmaker
 
-app = FastAPI()
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
+from contextlib import asynccontextmanager
+
+MODEL_NAME = "cybersectony/phishing-email-detection-distilbert_v2.4.1"
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Setup Phase 1: Shared State & Initialization
+    print("Loading global models and tokenizers...")
+    try:
+        app.state.tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+        model = AutoModelForSequenceClassification.from_pretrained(MODEL_NAME)
+        model.eval()
+        app.state.model = model
+        print("Models loaded successfully!")
+    except Exception as e:
+        print(f"Warning: Could not load model/tokenizer. Error: {e}")
+        app.state.tokenizer = None
+        app.state.model = None
+    
+    yield
+    
+    # Teardown
+    app.state.tokenizer = None
+    app.state.model = None
+
+# Pass lifespan into the FastAPI init
+app = FastAPI(lifespan=lifespan)
 
 # CORS Setup
 app.add_middleware(
@@ -27,6 +54,10 @@ app.add_middleware(
 # Include the Phishing Pipeline router
 from pipelines.api_routes import router as phishing_router
 app.include_router(phishing_router)
+
+# Include the URL Analysis router
+from pipelines.url.url_routes import router as url_router
+app.include_router(url_router)
 
 @app.get("/api/health")
 def health_check():

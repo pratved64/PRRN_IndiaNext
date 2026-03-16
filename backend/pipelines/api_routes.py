@@ -1,5 +1,5 @@
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, Field
+from fastapi import APIRouter, HTTPException, Request
+from pydantic import BaseModel, HttpUrl, Field
 from typing import List
 
 # Import our AI pipeline logic
@@ -40,10 +40,16 @@ def translate_risk_score(score: float) -> str:
 
 
 @router.post("/text", response_model=ThreatResponse)
-async def analyze_text_endpoint(request: ThreatRequest):
+async def analyze_text_endpoint(request_data: ThreatRequest, request: Request):
     """
     Step 4.1 & 4.2: ThreatRequest / ThreatResponse schemas and POST endpoint
     """
+    model = request.app.state.model
+    tokenizer = request.app.state.tokenizer
+    
+    if model is None or tokenizer is None:
+        raise HTTPException(status_code=503, detail="Phishing Models are currently unavailable or still loading.")
+
     try:
         # Run the heavy PyTorch logic
         # (In a production system using FastAPI, we would run this in a threadpool 
@@ -51,7 +57,7 @@ async def analyze_text_endpoint(request: ThreatRequest):
         # as per the RULES.md "Ensure heavy ml inference don't block main event loop")
         import anyio
         
-        result = await anyio.to_thread.run_sync(analyze_email, request.text)
+        result = await anyio.to_thread.run_sync(analyze_email, request_data.text, model, tokenizer)
         
         risk_score = result["risk_score"]
         classification = translate_risk_score(risk_score)
@@ -67,4 +73,5 @@ async def analyze_text_endpoint(request: ThreatRequest):
     except Exception as e:
         # RULES.md: Fail Gracefully
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+
 

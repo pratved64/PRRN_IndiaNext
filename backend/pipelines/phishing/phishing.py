@@ -6,16 +6,7 @@ from captum.attr import LayerIntegratedGradients
 
 MODEL_NAME = "cybersectony/phishing-email-detection-distilbert_v2.4.1"
 
-# Initialize global components (Step 1 & 2)
-try:
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-    model = AutoModelForSequenceClassification.from_pretrained(MODEL_NAME)
-    model.eval()  # Set to evaluation mode
-except Exception as e:
-    print(f"Warning: Could not load model/tokenizer. Ensure model is downloaded. Error: {e}")
-    tokenizer = None
-    model = None
-
+# The global model and tokenizer are now managed by FastAPI's lifespan in main.py
 
 def clean_text(raw_input: str) -> str:
     """
@@ -30,7 +21,7 @@ def clean_text(raw_input: str) -> str:
     return clean_str
 
 
-def preprocess_email(raw_input: str) -> tuple[torch.Tensor, list[str]]:
+def preprocess_email(raw_input: str, tokenizer) -> tuple[torch.Tensor, list[str]]:
     """
     Step 2.2 & 2.3: Tokenization and Head + Tail Truncation
     Returns:
@@ -60,17 +51,20 @@ def preprocess_email(raw_input: str) -> tuple[torch.Tensor, list[str]]:
 
 # --- Phase 3: Inference & Explainability ---
 
-def custom_forward(inputs: torch.Tensor):
-    """
-    Custom forward function for Captum.
-    We pass input_ids directly, and return the logits for the positive class.
-    """
-    # inputs is input_ids of shape [batch, seq_len]
-    outputs = model(input_ids=inputs)
-    # Return the logits for the positive class (phishing = index 1)
-    return outputs.logits
+# We need a closure to pass the dynamic model instance to Captum
+def create_custom_forward(model):
+    def custom_forward(inputs: torch.Tensor):
+        """
+        Custom forward function for Captum.
+        We pass input_ids directly, and return the logits for the positive class.
+        """
+        # inputs is input_ids of shape [batch, seq_len]
+        outputs = model(input_ids=inputs)
+        # Return the logits for the positive class (phishing = index 1)
+        return outputs.logits
+    return custom_forward
 
-def get_word_attributions(attributions: torch.Tensor, tokens: list[str]) -> list[dict]:
+def get_word_attributions(attributions: torch.Tensor, tokens: list[str], tokenizer) -> list[dict]:
     """
     Step 3.4: Aggregate Word Scores
     Attributions come in as shape [1, seq_len, embed_dim].
@@ -113,15 +107,16 @@ def get_word_attributions(attributions: torch.Tensor, tokens: list[str]) -> list
     return word_scores
 
 
-def analyze_email(raw_input: str):
+def analyze_email(raw_input: str, model, tokenizer):
     """
     Step 3.1, 3.2, 3.3: The Forward Pass and Calculate Attributions
+    Now abstract enough to be used by both Text and URL pipelines.
     """
     if model is None or tokenizer is None:
         raise RuntimeError("Model or Tokenizer not initialized.")
 
     # 1. Preprocess
-    input_tensor, tokens = preprocess_email(raw_input)
+    input_tensor, tokens = preprocess_email(raw_input, tokenizer)
     
     # 2. Forward pass for prediction
     with torch.no_grad():
@@ -133,8 +128,8 @@ def analyze_email(raw_input: str):
         
     # 3. Explainability (Captum)
     # Step 3.2: Initialize LayerIntegratedGradients pointing at the word embeddings layer
-    # For DistilBERT, it is model.distilbert.embeddings.word_embeddings
-    lig = LayerIntegratedGradients(custom_forward, model.distilbert.embeddings.word_embeddings)
+    # We use a closure so custom_forward binds to our specific model instance
+    lig = LayerIntegratedGradients(create_custom_forward(model), model.distilbert.embeddings.word_embeddings)
     
     # We pass the input_ids (input_tensor) directly. The baseline is a tensor of zeros, 
     # which usually corresponds to the [PAD] token in HuggingFace tokenizers.
@@ -150,7 +145,7 @@ def analyze_email(raw_input: str):
     )
     
     # 4. Step 3.4 Aggregate word scores
-    highlighted_words = get_word_attributions(attributions, tokens)
+    highlighted_words = get_word_attributions(attributions, tokens, tokenizer)
     
     return {
         "risk_score": risk_score,
