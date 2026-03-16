@@ -15,6 +15,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               {children}
             </main>
 
+            {/* Ghost Node Trap for Scrapers/Bots */}
+            {/* INVISIBLE TO HUMANS - DO NOT REMOVE */}
+            <a 
+              href="/api/system-telemetry-trap" 
+              style={{ position: 'absolute', left: '-9999px', top: '-9999px', width: '1px', height: '1px', overflow: 'hidden' }}
+              aria-hidden="true"
+              rel="nofollow"
+            >
+              System Configuration Telemetry
+            </a>
+
             {/* Global CyberBot Overlay */}
             {/* Placed here so it floats above all pages and retains access to Language/Theme contexts */}
             <CyberBot />
