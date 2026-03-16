@@ -2,7 +2,8 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import ExplainabilityCard from "@/components/ExplainabilityCard";
-import DashboardNav from "@/components/DashboardNav"; // Assuming you have this
+import DashboardNav from "@/components/DashboardNav";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 interface ThreatResult {
   threatType: string;
@@ -19,6 +20,7 @@ export default function DeepfakeScanner() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState<ThreatResult | null>(null);
   const [sessionId, setSessionId] = useState("");
+  const { t } = useLanguage();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaRef = useRef<HTMLMediaElement>(null);
@@ -281,10 +283,10 @@ export default function DeepfakeScanner() {
         {/* Header Title */}
         <header className="mb-10">
           <h1 className="text-4xl md:text-5xl font-light tracking-tight text-white mb-2">
-            Media <span className="font-bold">Scanner</span>
+            {t('df.title') || "Media "} <span className="font-bold">{t('df.title2') || "Scanner"}</span>
           </h1>
           <p className="text-neutral-400 font-mono text-sm uppercase tracking-widest border-l-2 border-white/20 pl-3">
-            Module // Deepfake & Synthetic Payload Inspection
+            {t('df.subtitle') || "Module // Deepfake & Synthetic Payload Inspection"}
           </p>
         </header>
 
@@ -299,7 +301,7 @@ export default function DeepfakeScanner() {
               <div className="w-3 h-3 rounded-full bg-green-500/20 border border-green-500/50"></div>
             </div>
             <div className="text-xs font-mono text-neutral-500 uppercase tracking-widest">
-              Secure_Media_Sandbox
+              {t('df.sandbox') || "Secure_Media_Sandbox"}
             </div>
           </div>
 
@@ -319,8 +321,8 @@ export default function DeepfakeScanner() {
                   className="hidden" 
                 />
                 <div className="text-5xl mb-4 grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-100 transition-all">📸</div>
-                <p className="text-white font-mono uppercase tracking-widest text-sm mb-2">[ INITIALIZE UPLOAD ]</p>
-                <p className="text-xs font-mono text-neutral-500">Awaiting Image, Audio, or Video Payload...</p>
+                <p className="text-white font-mono uppercase tracking-widest text-sm mb-2">{t('df.initUpload') || "[ INITIALIZE UPLOAD ]"}</p>
+                <p className="text-xs font-mono text-neutral-500">{t('df.awaiting') || "Awaiting Image, Audio, or Video Payload..."}</p>
               </div>
             )}
 
@@ -333,7 +335,7 @@ export default function DeepfakeScanner() {
                   <>
                     <div className="absolute inset-0 bg-black/50 z-20 backdrop-blur-[2px] flex items-center justify-center">
                       <span className="text-cyan-400 font-mono text-sm uppercase tracking-widest animate-pulse drop-shadow-[0_0_8px_rgba(6,182,212,0.8)]">
-                        Running Heuristic Pixel Analysis...
+                        {t('df.analyzing') || "Running Heuristic Pixel Analysis..."}
                       </span>
                     </div>
                     <div className="absolute left-0 w-full h-[2px] cyber-scanner-media z-30 pointer-events-none"></div>
@@ -433,9 +435,9 @@ export default function DeepfakeScanner() {
                 <div className="flex justify-between items-center mb-3">
                   <h4 className="text-xs font-mono uppercase text-cyan-400 flex items-center gap-2">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    Forensic Timeline Markers
+                    {t('df.timeline') || "Forensic Timeline Markers"}
                   </h4>
-                  <span className="text-[10px] font-mono text-neutral-500 uppercase">Click to scrub</span>
+                  <span className="text-[10px] font-mono text-neutral-500 uppercase">{t('df.scrub') || "Click to scrub"}</span>
                 </div>
                 <div className="flex gap-2 relative overflow-x-auto pb-2 scrollbar-hide">
                   {result.timelineMarkers.map((marker, idx) => (
@@ -460,9 +462,9 @@ export default function DeepfakeScanner() {
             {(isAnalyzing || result) && file && !file.type.startsWith('image/') && (
               <div className="mt-6 border border-white/10 bg-neutral-950/50 rounded-lg p-4 relative overflow-hidden">
                 <div className="flex justify-between items-center mb-4">
-                  <h4 className="text-xs font-mono uppercase text-cyan-400">Heuristic Confidence Graph</h4>
+                  <h4 className="text-xs font-mono uppercase text-cyan-400">{t('df.graphTitle') || "Heuristic Confidence Graph"}</h4>
                   <span className="text-[10px] font-mono text-neutral-500 uppercase">
-                    {isAnalyzing ? "Processing..." : "Analysis Complete"}
+                    {isAnalyzing ? (t('df.processing') || "Processing...") : (t('df.complete') || "Analysis Complete")}
                   </span>
                 </div>
                 
@@ -493,13 +495,13 @@ export default function DeepfakeScanner() {
                           transform: hoverData.x > 80 ? 'translateX(-10px)' : 'translateX(10px)'
                         }}
                       >
-                        <div className="text-[10px] uppercase font-mono text-cyan-400 mb-1 border-b border-white/10 pb-1">Telemetry Data</div>
+                        <div className="text-[10px] uppercase font-mono text-cyan-400 mb-1 border-b border-white/10 pb-1">{t('df.telemetry') || "Telemetry Data"}</div>
                         <div className="flex justify-between items-center text-xs font-mono mb-1">
-                          <span className="text-neutral-400">Time:</span>
+                          <span className="text-neutral-400">{t('df.time') || "Time:"}</span>
                           <span className="text-white">0:{(hoverData.time < 10 ? "0" : "") + hoverData.time.toFixed(1).replace(".", ":")}s</span>
                         </div>
                         <div className="flex justify-between items-center text-xs font-mono">
-                          <span className="text-neutral-400">AI DETECT:</span>
+                          <span className="text-neutral-400">{t('df.aiDetect') || "AI DETECT:"}</span>
                           <span className={hoverData.y < 50 ? "text-red-400 font-bold" : "text-green-400"}>
                             {(100 - hoverData.y).toFixed(1)}%
                           </span>
@@ -560,10 +562,10 @@ export default function DeepfakeScanner() {
           {/* Console Bottom Status Bar */}
           <div className="bg-neutral-950 px-4 py-2 flex justify-between items-center text-[10px] md:text-xs font-mono text-neutral-500 uppercase border-t border-white/10">
             <div className="flex gap-4 md:gap-8">
-              <span>Type: {file ? file.type : "N/A"}</span>
+              <span>{t('df.type') || "Type:"} {file ? file.type : "N/A"}</span>
             </div>
             <div className="flex gap-4 md:gap-8">
-              <span>Size: {file ? (file.size / 1024 / 1024).toFixed(2) + " MB" : "0.00 MB"}</span>
+              <span>{t('df.size') || "Size:"} {file ? (file.size / 1024 / 1024).toFixed(2) + " MB" : "0.00 MB"}</span>
             </div>
           </div>
 
@@ -574,7 +576,7 @@ export default function DeepfakeScanner() {
               disabled={isAnalyzing || !file}
               className="text-xs font-mono uppercase tracking-widest text-neutral-500 hover:text-white transition disabled:opacity-30 w-full md:w-auto text-left md:text-center"
             >
-              [ Clear Payload ]
+              {t('df.clear') || "[ Clear Payload ]"}
             </button>
 
             <div className="flex gap-3 w-full md:w-auto">
@@ -583,7 +585,7 @@ export default function DeepfakeScanner() {
                 disabled={isAnalyzing || !file}
                 className="flex-1 md:flex-none px-6 py-3 text-xs md:text-sm font-mono uppercase tracking-widest text-neutral-400 border border-white/10 rounded hover:bg-white/10 hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
               >
-                Simulate Safe
+                {t('df.simSafe') || "Simulate Safe"}
               </button>
 
               <button
@@ -591,7 +593,7 @@ export default function DeepfakeScanner() {
                 disabled={isAnalyzing || !file}
                 className="flex-1 md:flex-none px-8 py-3 text-xs md:text-sm font-mono font-bold uppercase tracking-widest bg-white text-black rounded hover:bg-neutral-200 hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all disabled:bg-neutral-800 disabled:text-neutral-500 disabled:shadow-none disabled:cursor-not-allowed"
               >
-                {isAnalyzing ? "Processing..." : "Scan Media"}
+                {isAnalyzing ? (t('df.processing') || "Processing...") : (t('df.scanMedia') || "Scan Media")}
               </button>
             </div>
           </div>

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import ExplainabilityCard from "@/components/ExplainabilityCard";
 import DashboardNav from "@/components/DashboardNav";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 interface ThreatResult {
   threatType: string;
@@ -17,6 +18,7 @@ export default function UrlScanner() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState<ThreatResult | null>(null);
   const [sessionId, setSessionId] = useState("");
+  const { t } = useLanguage();
 
   useEffect(() => {
     // Generate a fake session ID on load
@@ -117,10 +119,10 @@ export default function UrlScanner() {
         {/* Header Title */}
         <header className="mb-10">
           <h1 className="text-4xl md:text-5xl font-light tracking-tight text-white mb-2">
-            Domain <span className="font-bold">Scanner</span>
+            {t('us.title') || "Domain "} <span className="font-bold">{t('us.title2') || "Scanner"}</span>
           </h1>
           <p className="text-neutral-400 font-mono text-sm uppercase tracking-widest border-l-2 border-white/20 pl-3">
-            Module // Network Intelligence & URL Inspection
+            {t('us.subtitle') || "Module // Network Intelligence & URL Inspection"}
           </p>
         </header>
 
@@ -135,7 +137,7 @@ export default function UrlScanner() {
               <div className="w-3 h-3 rounded-full bg-green-500/20 border border-green-500/50"></div>
             </div>
             <div className="text-xs font-mono text-neutral-500 uppercase tracking-widest">
-              URL_Inspection_Sandbox
+              {t('us.sandbox') || "URL_Inspection_Sandbox"}
             </div>
           </div>
 
@@ -146,7 +148,7 @@ export default function UrlScanner() {
               {isAnalyzing && (
                 <div className="absolute inset-0 bg-black/80 z-20 flex flex-col items-center justify-center backdrop-blur-[2px]">
                   <div className="text-white font-mono text-sm uppercase tracking-widest mb-3 animate-pulse">
-                    Tracing Domain Records...
+                    {t('us.tracing') || "Tracing Domain Records..."}
                   </div>
                 </div>
               )}
@@ -158,7 +160,7 @@ export default function UrlScanner() {
                   id="target-url"
                   type="url"
                   className="w-full bg-transparent text-neutral-200 font-mono text-lg md:text-xl placeholder-neutral-700 outline-none relative z-10 tracking-wide"
-                  placeholder="https://suspicious-link.com/login"
+                  placeholder={t('us.placeholder') || "https://suspicious-link.com/login"}
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
                   disabled={isAnalyzing}
@@ -175,13 +177,13 @@ export default function UrlScanner() {
               {/* Console Bottom Status Bar */}
               <div className="bg-neutral-950/80 px-4 py-2 flex justify-between items-center text-[10px] md:text-xs font-mono text-neutral-500 uppercase border-t border-white/5">
                 <div className="flex gap-4 md:gap-8">
-                  <span>Protocol: {parsedProtocol}</span>
+                  <span>{t('us.protocol') || "Protocol: "} {parsedProtocol}</span>
                   <span className={parsedProtocol === "HTTP" ? "text-red-400" : ""}>
-                    {parsedProtocol === "HTTP" ? "INSECURE" : "SECURE"}
+                    {parsedProtocol === "HTTP" ? (t('us.insecure') || "INSECURE") : (t('us.secure') || "SECURE")}
                   </span>
                 </div>
                 <div className="flex gap-4 md:gap-8">
-                  <span>Domain_Len: {url ? domainLength : 0}</span>
+                  <span>{t('us.domainLen') || "Domain_Len: "} {url ? domainLength : 0}</span>
                 </div>
               </div>
             </div>
@@ -194,7 +196,7 @@ export default function UrlScanner() {
               disabled={isAnalyzing || !url}
               className="text-xs font-mono uppercase tracking-widest text-neutral-500 hover:text-white transition disabled:opacity-30 w-full md:w-auto text-left md:text-center"
             >
-              [ Clear Target ]
+              {t('us.clear') || "[ Clear Target ]"}
             </button>
 
             <div className="flex gap-3 w-full md:w-auto">
@@ -203,7 +205,7 @@ export default function UrlScanner() {
                 disabled={isAnalyzing || !url}
                 className="flex-1 md:flex-none px-6 py-3 text-xs md:text-sm font-mono uppercase tracking-widest text-neutral-400 border border-white/10 rounded hover:bg-white/10 hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
               >
-                Simulate Safe
+                {t('us.simSafe') || "Simulate Safe"}
               </button>
 
               <button
@@ -211,7 +213,7 @@ export default function UrlScanner() {
                 disabled={isAnalyzing || !url}
                 className="flex-1 md:flex-none px-8 py-3 text-xs md:text-sm font-mono font-bold uppercase tracking-widest bg-white text-black rounded hover:bg-neutral-200 hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all disabled:bg-neutral-800 disabled:text-neutral-500 disabled:shadow-none disabled:cursor-not-allowed"
               >
-                {isAnalyzing ? "Processing" : "Inspect URL"}
+                {isAnalyzing ? (t('us.processing') || "Processing") : (t('us.inspect') || "Inspect URL")}
               </button>
             </div>
           </div>
