@@ -1,25 +1,56 @@
 from dotenv import load_dotenv
 load_dotenv()
 
+# IMPORT AS REQUIRED
+# from qdrant_client import QdrantClient
+# from sqlalchemy import create_engine
+# from sqlalchemy.orm import sessionmaker
+
+from transformers import AutoTokenizer, AutoModelForSequenceClassification, ViTForImageClassification, ViTImageProcessor
 from contextlib import asynccontextmanager
 import os
 import sys
 import time
 import logging
 
-from fastapi import FastAPI, Request, Response
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+DISTILBERT_MODEL = "cybersectony/phishing-email-detection-distilbert_v2.4.1"
+VIT_MODEL = "prithivMLmods/Deep-Fake-Detector-v2-Model"
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    import sys as _sys, os as _os
-    _sys.path.insert(0, _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "sentinel_behavior"))
-    from sentinel_behavior.main import startup_sentinel
-    await startup_sentinel(app)
-    print("SENTINEL AI — all models loaded")
+    # --- DistilBERT phishing model ---
+    print("Loading phishing detection model...")
+    try:
+        app.state.tokenizer = AutoTokenizer.from_pretrained(DISTILBERT_MODEL)
+        distilbert = AutoModelForSequenceClassification.from_pretrained(DISTILBERT_MODEL)
+        distilbert.eval()
+        app.state.model = distilbert
+        print("Phishing model loaded.")
+    except Exception as e:
+        print(f"Warning: Could not load phishing model. Error: {e}")
+        app.state.tokenizer = None
+        app.state.model = None
+
+    # --- ViT deepfake model ---
+    print("Loading deepfake detection model...")
+    try:
+        app.state.vit_processor = ViTImageProcessor.from_pretrained(VIT_MODEL)
+        vit = ViTForImageClassification.from_pretrained(VIT_MODEL)
+        vit.eval()
+        app.state.vit_model = vit
+        print("Deepfake model loaded.")
+    except Exception as e:
+        print(f"Warning: Could not load deepfake model. Error: {e}")
+        app.state.vit_processor = None
+        app.state.vit_model = None
+    
     yield
-    print("Backend shutting down.")
+    
+    # Teardown
+    app.state.tokenizer = None
+    app.state.model = None
+    app.state.vit_processor = None
+    app.state.vit_model = None
 
 app = FastAPI(title="PRRN IndiaNext — Unified Backend", lifespan=lifespan)
 
@@ -53,11 +84,19 @@ async def global_exception_handler(request: Request, exc: Exception):
     logger.error("Unhandled error on %s: %s", request.url, exc)
     return JSONResponse(status_code=500, content={"error": type(exc).__name__, "message": str(exc), "path": str(request.url)})
 
-from pipelines.api_routes import router as phishing_router
+# Include the Phishing Pipeline router
+from pipelines.phishing.api_routes import router as phishing_router
 app.include_router(phishing_router)
 
 from sentinel_behavior.main import router as sentinel_router
 app.include_router(sentinel_router, prefix="/api/sentinel", tags=["Sentinel"])
+
+from pipelines.deepfake_audio.audio_api_routes import router as audio_api_router
+app.include_router(audio_api_router)
+
+# Include the Video Deepfake router
+from pipelines.video_deepfake.video_routes import router as video_router
+app.include_router(video_router)
 
 @app.get("/api/health")
 async def health_check(request: Request):
