@@ -59,6 +59,10 @@ app.include_router(phishing_router)
 from pipelines.url.url_routes import router as url_router
 app.include_router(url_router)
 
+# Include the Deepfake Audio API router
+from pipelines.deepfake_audio.api_routes import router as deepfake_audio_router
+app.include_router(deepfake_audio_router)
+
 @app.get("/api/health")
 def health_check():
     return {"status": "ok", "message": "Backend is locked and loaded."}
