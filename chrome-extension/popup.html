@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="popup.css">
+  <title>abhedya.sec</title>
+</head>
+<body>
+  <!-- HEADER -->
+  <header>
+    <div class="logo">
+      <div class="logo-dot"></div>
+      abhedya<span>.sec</span>
+    </div>
+    <div class="status-indicator" id="status-dot">
+      <!-- pulsing green/red dot -->
+    </div>
+  </header>
+
+  <!-- TAB NAVIGATION -->
+  <nav class="tab-nav">
+    <button class="tab-btn active" 
+            data-tab="url-scan">
+      URL SCAN
+    </button>
+    <button class="tab-btn" 
+            data-tab="text-scan">
+      TEXT SCAN
+    </button>
+    <button class="tab-btn" 
+            data-tab="blocklist">
+      BLOCKLIST
+      <span class="count-badge" 
+            id="blocklist-count">0</span>
+    </button>
+  </nav>
+
+  <!-- TAB 1: URL SCAN -->
+  <div class="tab-content active" id="tab-url-scan">
+    
+    <!-- Current page scan result -->
+    <div class="current-url-card" id="current-url-card">
+      <div class="card-label">CURRENT PAGE</div>
+      <div class="url-text" id="current-url-text">
+        Scanning...
+      </div>
+      <div class="verdict-banner" id="verdict-banner">
+        <!-- dynamically populated -->
+      </div>
+      <div class="score-row">
+        <span class="score-label">RISK SCORE</span>
+        <span class="score-value" 
+              id="risk-score">--</span>
+      </div>
+      <div class="explanation-text" 
+           id="explanation-text">
+      </div>
+    </div>
+
+    <!-- Manual URL input -->
+    <div class="input-section">
+      <div class="input-label">SCAN CUSTOM URL</div>
+      <div class="input-row">
+        <input type="text" 
+               id="manual-url-input"
+               placeholder="https://example.com"
+               class="text-input" />
+        <button id="scan-url-btn" 
+                class="scan-btn">
+          SCAN
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- TAB 2: TEXT SCAN -->
+  <div class="tab-content" id="tab-text-scan">
+    
+    <div class="input-label">
+      PASTE SUSPICIOUS CONTENT
+    </div>
+    <textarea 
+      id="text-input"
+      placeholder="Paste email, SMS, or any suspicious text here..."
+      class="text-area"
+      rows="8"
+    ></textarea>
+    
+    <button id="scan-text-btn" class="scan-btn full">
+      ANALYZE FOR PHISHING
+    </button>
+    
+    <!-- Results -->
+    <div class="result-card" 
+         id="text-result-card" 
+         style="display:none">
+      <div class="result-verdict" 
+           id="text-verdict"></div>
+      <div class="result-confidence" 
+           id="text-confidence"></div>
+      <div class="result-explanation" 
+           id="text-explanation"></div>
+    </div>
+
+  </div>
+
+  <!-- TAB 3: BLOCKLIST -->
+  <div class="tab-content" id="tab-blocklist">
+    
+    <div class="blocklist-header">
+      <span class="input-label">
+        SCANNED URLS
+      </span>
+      <button id="clear-blocklist-btn" 
+              class="danger-btn">
+        CLEAR ALL
+      </button>
+    </div>
+    
+    <div class="blocklist-container" 
+         id="blocklist-container">
+      <!-- Dynamically populated -->
+    </div>
+    
+    <div class="blocklist-empty" 
+         id="blocklist-empty">
+      No URLs scanned yet. 
+      Browse the web to start scanning.
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <span class="backend-status" 
+          id="backend-status">
+      Connecting...
+    </span>
+    <span class="version">v1.0.0</span>
+  </footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>

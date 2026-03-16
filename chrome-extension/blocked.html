@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>abhedya.sec — Threat Blocked</title>
+    <link rel="stylesheet" href="blocked.css">
+</head>
+<body>
+    <div class="overlay-content">
+        <div class="shield-container">
+            <div class="aura"></div>
+            <svg class="shield-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+        </div>
+        
+        <h1>THREAT BLOCKED</h1>
+        <div class="url-display" id="blocked-url"></div>
+        <div class="verdict-badge" id="blocked-verdict"></div>
+        <div class="risk-score" id="blocked-score"></div>
+        <div class="explanation" id="blocked-explanation"></div>
+        
+        <div class="button-row">
+            <button id="go-back-btn" class="btn primary">← GO BACK</button>
+            <a href="#" id="proceed-link" class="proceed-link">Proceed Anyway (Unsafe)</a>
+        </div>
+        
+        <div class="powered-by">Protected by abhedya.sec</div>
+    </div>
+    
+    <script src="blocked.js"></script>
+</body>
+</html>

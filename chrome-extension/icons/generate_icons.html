@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generate Icons</title>
+</head>
+<body style="background: #222; color: #eee; font-family: sans-serif; padding: 20px;">
+    <h2>Icon Generator</h2>
+    <p>Click the buttons below to generate and download the icons.</p>
+    
+    <div id="canvases" style="display: flex; gap: 20px; align-items: flex-end; margin-bottom: 20px;"></div>
+    <button onclick="downloadAll()" style="padding: 10px 20px; font-size: 16px; cursor: pointer;">Download All Icons</button>
+
+    <script>
+        const sizes = [16, 32, 48, 128];
+        const container = document.getElementById('canvases');
+        
+        sizes.forEach(size => {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            canvas.id = `icon-${size}`;
+            
+            const ctx = canvas.getContext('2d');
+            
+            // Background
+            ctx.fillStyle = '#0a0f1e';
+            ctx.fillRect(0, 0, size, size);
+            
+            // Shield Path Simplified
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = size * 0.08;
+            ctx.lineJoin = 'round';
+            ctx.beginPath();
+            
+            // Roughly a shield shape
+            const w = size;
+            const h = size;
+            ctx.moveTo(w/2, h*0.1); // top center
+            ctx.lineTo(w*0.9, h*0.2); // top right
+            ctx.lineTo(w*0.9, h*0.6); // right edge going down
+            ctx.quadraticCurveTo(w*0.5, h*0.9, w/2, h*0.9); // bottom curve left
+            ctx.quadraticCurveTo(w*0.1, h*0.9, w*0.1, h*0.6); // bottom curve right
+            ctx.lineTo(w*0.1, h*0.2); // left edge going up
+            ctx.closePath();
+            ctx.stroke();
+            
+            // Cyan dot in center
+            ctx.fillStyle = '#00ffff';
+            ctx.beginPath();
+            ctx.arc(w/2, h/2, size*0.15, 0, Math.PI * 2);
+            ctx.fill();
+            
+            container.appendChild(canvas);
+        });
+        
+        function downloadAll() {
+            sizes.forEach(size => {
+                const canvas = document.getElementById(`icon-${size}`);
+                const dataUrl = canvas.toDataURL('image/png');
+                const a = document.createElement('a');
+                a.href = dataUrl;
+                a.download = `icon${size}.png`;
+                a.click();
+            });
+        }
+    </script>
+</body>
+</html>
