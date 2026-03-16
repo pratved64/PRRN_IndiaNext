@@ -18,9 +18,13 @@ class LinearClassifier(torch.nn.Module):
     def forward(self, x):
         return self.fc(self.dropout(x))
 
+<<<<<<< HEAD
 import os
 ckpt_path  = os.path.join(os.path.dirname(__file__), "classifier.pt")
 ckpt       = torch.load(ckpt_path, map_location=DEVICE)
+=======
+ckpt       = torch.load("classifier.pt", map_location=DEVICE)
+>>>>>>> ffb8694 (added audio pipeline)
 classifier = LinearClassifier(ckpt["input_dim"]).to(DEVICE)
 classifier.load_state_dict(ckpt["model_state"])
 classifier.eval()
