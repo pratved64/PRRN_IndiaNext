@@ -15,7 +15,10 @@ import cv2
 from fastapi import APIRouter, HTTPException, Request, UploadFile, File
 from pydantic import BaseModel
 
-from pipelines.video_deepfake.video_processor import extract_faces_from_video
+from pipelines.video_deepfake.video_processor import (
+    extract_faces_from_video,
+    extract_face_from_image,
+)
 from pipelines.video_deepfake.deepfake_detector import run_inference, generate_attention_heatmap
 
 router = APIRouter(prefix="/analyze", tags=["Media Deepfake Analysis"])
@@ -43,16 +46,13 @@ def _translate_risk(score: float) -> str:
         return "Low Risk: Likely Authentic"
 
 
-def _run_pipeline(video_path: str, model, processor) -> dict:
+def _run_ml_pipeline(face_crops, model, processor) -> dict:
     """
-    Synchronous pipeline entry point — safe to call from a thread pool.
-    Steps 5.3:
-      1. Extract and crop faces from video
+    Shared ML core:
+      1. Take one or more RGB 224×224 face crops
       2. Run ViT inference
       3. Generate attention heatmap for the first face
     """
-    # Phase 1 & 2: frame scanning + face detection & cropping (handled inside helper)
-    face_crops = extract_faces_from_video(video_path)
     if not face_crops:
         raise ValueError("No faces detected in the media. Cannot classify.")
 
@@ -80,8 +80,7 @@ def _run_video_pipeline(video_path: str, model, processor) -> dict:
     return _run_ml_pipeline(face_crops, model, processor)
 
 def _run_image_pipeline(image_bytes: bytes, model, processor) -> dict:
-    face_crop = extract_face_from_image(image_bytes)
-    face_crops = [face_crop] if face_crop is not None else []
+    face_crops = extract_face_from_image(image_bytes)
     return _run_ml_pipeline(face_crops, model, processor)
 
 # ---------------------------------------------------------------------------
