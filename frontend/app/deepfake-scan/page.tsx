@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import ExplainabilityCard from "@/components/ExplainabilityCard";
 import DashboardNav from "@/components/DashboardNav";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { useTheme } from "@/lib/ThemeContext";
 
 interface ThreatResult {
   threatType: string;
@@ -20,6 +21,7 @@ export default function DeepfakeScanner() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState<ThreatResult | null>(null);
   const [sessionId, setSessionId] = useState("");
+  const { theme, toggleTheme, themeStyle } = useTheme();
   const { t } = useLanguage();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -222,7 +224,10 @@ export default function DeepfakeScanner() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-neutral-200 font-sans selection:bg-neutral-700 selection:text-white relative overflow-hidden flex flex-col items-center pb-20">
+    <div 
+      className="min-h-screen bg-[#0a0a0a] text-neutral-200 font-sans selection:bg-neutral-700 selection:text-white relative overflow-hidden flex flex-col items-center pb-20"
+      style={themeStyle}
+    >
       
       {/* Dynamic CSS for Grid & Scanning Animation */}
       <style dangerouslySetInnerHTML={{__html: `
@@ -268,6 +273,20 @@ export default function DeepfakeScanner() {
 
       {/* Main Content Container */}
       <div className="max-w-5xl w-full px-4 md:px-8 mt-12 relative z-10 mx-auto">
+
+        {/* Theme Toggle */}
+        <div className="flex justify-end mb-4">
+          <button 
+            onClick={toggleTheme}
+            className="flex items-center gap-2 px-4 py-2 rounded-md border border-white/10 bg-white/5 text-neutral-400 hover:text-white hover:bg-white/10 transition-all cursor-pointer font-mono text-xs uppercase tracking-widest focus:outline-none"
+          >
+            {theme === 'dark' ? (
+              <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg> LIGHT</>
+            ) : (
+              <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg> DARK</>
+            )}
+          </button>
+        </div>
         
         {/* Top Telemetry Bar */}
         <div className="flex justify-between items-center mb-8 pb-4 border-b border-white/10 text-xs font-mono uppercase tracking-widest text-neutral-500">

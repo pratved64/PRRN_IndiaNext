@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import DashboardNav from "@/components/DashboardNav";
+import NewsWidget from "@/components/NewsWidget";
+import { useTheme } from "@/lib/ThemeContext";
 
 const STATS = [
   { label: 'Threats Detected', value: '1,284', change: '+12% this week', color: 'text-red-400' },
@@ -28,13 +30,17 @@ const riskBadge: Record<string, string> = {
 
 export default function Dashboard() {
   const [sessionId, setSessionId] = useState("");
+  const { theme, toggleTheme, themeStyle } = useTheme();
 
   useEffect(() => {
     setSessionId(`SYS-${Math.random().toString(36).substring(2, 8).toUpperCase()}`);
   }, []);
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-200 font-sans selection:bg-neutral-700 selection:text-white relative overflow-hidden flex flex-col items-center">
+    <div 
+      className="min-h-screen bg-neutral-950 text-neutral-200 font-sans selection:bg-neutral-700 selection:text-white relative overflow-hidden flex flex-col items-center"
+      style={themeStyle}
+    >
       
       {/* Background Grid */}
       <style dangerouslySetInnerHTML={{__html: `
@@ -50,6 +56,20 @@ export default function Dashboard() {
       <DashboardNav />
 
       <div className="max-w-6xl w-full px-4 md:px-8 lg:px-12 relative z-10 mx-auto">
+
+        {/* Theme Toggle */}
+        <div className="flex justify-end mb-4">
+          <button 
+            onClick={toggleTheme}
+            className="flex items-center gap-2 px-4 py-2 rounded-md border border-white/10 bg-white/5 text-neutral-400 hover:text-white hover:bg-white/10 transition-all cursor-pointer font-mono text-xs uppercase tracking-widest focus:outline-none"
+          >
+            {theme === 'dark' ? (
+              <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg> LIGHT</>
+            ) : (
+              <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg> DARK</>
+            )}
+          </button>
+        </div>
         
         {/* Stats Grid */}
         <div className="grid grid-cols-2 gap-4 mb-8 lg:grid-cols-4">
@@ -64,8 +84,11 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* Recent Threats Table */}
-        <div className="bg-neutral-900/40 rounded-lg border border-white/10 overflow-hidden backdrop-blur-sm">
+        {/* Split Layout for Threats and News */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          {/* Recent Threats Table (2/3 width) */}
+          <div className="lg:col-span-2 bg-neutral-900/40 rounded-lg border border-white/10 overflow-hidden backdrop-blur-sm">
           <div className="px-6 py-4 border-b border-white/10 bg-black/40 flex justify-between items-center">
             <h2 className="text-sm font-mono uppercase text-white tracking-widest">Recent Interceptions</h2>
             <span className="text-[10px] font-mono text-neutral-500 uppercase flex items-center gap-2">
@@ -100,6 +123,13 @@ export default function Dashboard() {
               </tbody>
             </table>
           </div>
+          </div>
+
+          {/* News Widget (1/3 width) */}
+          <div className="lg:col-span-1 min-h-[400px]">
+            <NewsWidget />
+          </div>
+
         </div>
 
       </div>
