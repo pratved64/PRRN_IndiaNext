@@ -1,5 +1,5 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
+load_dotenv()
 
 # IMPORT AS REQUIRED
 # from qdrant_client import QdrantClient
@@ -8,6 +8,10 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, ViTForImageClassification, ViTImageProcessor
 from contextlib import asynccontextmanager
+import os
+import sys
+import time
+import logging
 
 DISTILBERT_MODEL = "cybersectony/phishing-email-detection-distilbert_v2.4.1"
 VIT_MODEL = "prithivMLmods/Deep-Fake-Detector-v2-Model"
@@ -48,37 +52,70 @@ async def lifespan(app: FastAPI):
     app.state.vit_processor = None
     app.state.vit_model = None
 
-# Pass lifespan into the FastAPI init
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(title="PRRN IndiaNext — Unified Backend", lifespan=lifespan)
 
-# CORS Setup
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"], 
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "https://*.vercel.app",
+        "*",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Database Connections Placeholders
-# PG_URL = "postgresql://user:password@localhost:5432/hackathon_db"
-# engine = create_engine(PG_URL)
-# SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+import time as _time
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+logger = logging.getLogger("backend")
 
-# qdrant = QdrantClient(host="localhost", port=6333)
+@app.middleware("http")
+async def log_requests(request: Request, call_next) -> Response:
+    start = _time.perf_counter()
+    response = await call_next(request)
+    elapsed = (_time.perf_counter() - start) * 1000
+    logger.info("%s %s \\u2192 %d (%.1f ms)", request.method, request.url.path, response.status_code, elapsed)
+    return response
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error("Unhandled error on %s: %s", request.url, exc)
+    return JSONResponse(status_code=500, content={"error": type(exc).__name__, "message": str(exc), "path": str(request.url)})
 
 # Include the Phishing Pipeline router
 from pipelines.phishing.api_routes import router as phishing_router
 app.include_router(phishing_router)
 
-# Include the URL Analysis router
-from pipelines.url.url_routes import router as url_router
-app.include_router(url_router)
+from sentinel_behavior.main import router as sentinel_router
+app.include_router(sentinel_router, prefix="/api/sentinel", tags=["Sentinel"])
+
+from pipelines.deepfake_audio.audio_api_routes import router as audio_api_router
+app.include_router(audio_api_router)
 
 # Include the Video Deepfake router
 from pipelines.video_deepfake.video_routes import router as video_router
 app.include_router(video_router)
 
 @app.get("/api/health")
-def health_check():
-    return {"status": "ok", "message": "Backend is locked and loaded."}
+async def health_check(request: Request):
+    try:
+        from models.isolation_forest import UserIsolationForest
+        if_manager = request.app.state.if_manager
+        users_trained = len(if_manager.models)
+        sentinel_loaded = users_trained > 0
+    except Exception:
+        sentinel_loaded = False
+        users_trained = 0
+
+    return {
+        "status": "ok",
+        "message": "Backend is locked and loaded.",
+        "sentinel_models_loaded": sentinel_loaded,
+        "users_trained": users_trained,
+        "services": {
+            "phishing_pipeline": "active",
+            "behavior_detection": "active" if sentinel_loaded else "loading",
+        },
+    }

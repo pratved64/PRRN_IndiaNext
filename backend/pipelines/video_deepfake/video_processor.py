@@ -29,7 +29,6 @@ def _safe_crop(frame: np.ndarray, x1: int, y1: int, x2: int, y2: int) -> np.ndar
 # Phase 1: Frame Extraction
 # ---------------------------------------------------------------------------
 
-def extract_frames(video_path: str, fps: int = 1) -> list[np.ndarray]:
 def extract_faces_from_video(video_path: str, target_face_count: int = 30, padding: float = 0.10) -> list[np.ndarray]:
     """
     Step 1.2: Open video_path with OpenCV, sample exactly one frame per second.
@@ -49,7 +48,7 @@ def extract_faces_from_video(video_path: str, target_face_count: int = 30, paddi
     total_frames: int = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
     if source_fps <= 0 or total_frames <= 0:
-    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     if total_frames <= 0:
         cap.release()
         raise ValueError(f"Invalid video metadata (fps={source_fps}, frames={total_frames})")
