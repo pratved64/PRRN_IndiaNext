@@ -5,10 +5,6 @@ from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-from fastapi import FastAPI, Request, Response
-from fastapi.responses import JSONResponse
-from fastapi.middleware.cors import CORSMiddleware
-
 # IMPORT AS REQUIRED
 # from qdrant_client import QdrantClient
 # from sqlalchemy import create_engine
@@ -16,9 +12,6 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, ViTForImageClassification, ViTImageProcessor
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request, Response
-from fastapi.responses import JSONResponse
-from fastapi.middleware.cors import CORSMiddleware
 import os
 import sys
 import time
@@ -67,13 +60,8 @@ app = FastAPI(title="PRRN IndiaNext — Unified Backend", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://localhost:3001",
-        "https://*.vercel.app",
-        "*",
-    ],
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )

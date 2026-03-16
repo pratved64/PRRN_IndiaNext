@@ -167,21 +167,21 @@ function showWarningOverlay(data) {
     const overlay = document.createElement('div');
     overlay.id = 'abhedya-threat-overlay';
     
-    overlay.innerHTML = \`
+    overlay.innerHTML = `
       <div class="abhedya-overlay-content">
         <div class="abhedya-shield-icon">🛡️</div>
         <h1>THREAT DETECTED</h1>
-        <div class="abhedya-url-display">\${data.url}</div>
-        <div class="abhedya-verdict-badge">\${data.verdict}</div>
-        <div class="abhedya-risk-score">\${data.score}/100</div>
-        <div class="abhedya-explanation">\${data.explanation}</div>
+        <div class="abhedya-url-display">${data.url}</div>
+        <div class="abhedya-verdict-badge">${data.verdict}</div>
+        <div class="abhedya-risk-score">${data.score}/100</div>
+        <div class="abhedya-explanation">${data.explanation}</div>
         <div class="abhedya-button-row">
           <button id="go-back-btn" class="abhedya-btn">← GO BACK</button>
           <button id="proceed-btn" class="abhedya-btn">PROCEED ANYWAY (UNSAFE)</button>
         </div>
         <div class="abhedya-powered-by">Protected by abhedya.sec</div>
       </div>
-    \`;
+    `;
     
     document.body.appendChild(overlay);
     

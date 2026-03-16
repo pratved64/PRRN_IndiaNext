@@ -119,7 +119,7 @@ async function loadCurrentTabStatus() {
              chrome.runtime.sendMessage({ type: 'SCAN_URL', url: currentUrl }, (res) => {
                  if (res && res.error) {
                      bannerEl.innerHTML = '<div class="verdict-banner" style="background:#64748b;color:white">SCAN FAILED</div>';
-                     expEl.textContent = res.error;
+                     expEl.textContent = 'Could not scan this URL. Check that backend is running.';
                      scoreEl.innerHTML = '--';
                  } else if (res) {
                      renderScanResult(res, bannerEl, scoreEl, expEl);
@@ -162,7 +162,8 @@ async function handleManualUrlScan() {
     chrome.runtime.sendMessage({ type: 'SCAN_URL', url: url }, (res) => {
         if (res && res.error) {
             bannerEl.innerHTML = '<div class="verdict-banner" style="background:#64748b;color:white">SCAN FAILED</div>';
-            expEl.textContent = res.error;
+            expEl.textContent = 'Could not scan this URL. Check that backend is running.';
+            scoreEl.innerHTML = '--';
         } else if (res) {
             renderScanResult(res, bannerEl, scoreEl, expEl);
             updateBlocklistUI();
@@ -185,7 +186,7 @@ async function handleTextScan() {
             resultCard.style.display = 'block';
             document.getElementById('text-verdict').innerHTML = '<div style="color:var(--malicious)">FAILED</div>';
             document.getElementById('text-confidence').innerHTML = '';
-            document.getElementById('text-explanation').textContent = res.error;
+            document.getElementById('text-explanation').textContent = 'Could not scan this text. Check that backend is running.';
             return;
         }
         
