@@ -85,28 +85,28 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 # Include the Phishing Pipeline router
 from pipelines.phishing.api_routes import router as phishing_router
-app.include_router(phishing_router)
+app.include_router(phishing_router, prefix="/api")
 
 # Include the URL Analysis router
 from pipelines.url.url_routes import router as url_router
-app.include_router(url_router)
+app.include_router(url_router, prefix="/api")
 
 from pipelines.sentinel_behavior.main import router as sentinel_router
 app.include_router(sentinel_router, prefix="/api/sentinel", tags=["Sentinel"])
 
 from pipelines.deepfake_audio.audio_api_routes import router as audio_api_router
-app.include_router(audio_api_router)
+app.include_router(audio_api_router, prefix="/api")
 
 # Include the Video Deepfake router
 from pipelines.video_deepfake.video_routes import router as video_router
-app.include_router(video_router)
+app.include_router(video_router, prefix="/api")
 
 # Include the Deepfake Audio API router
 from pipelines.deepfake_audio.audio_api_routes import router as deepfake_audio_router
-app.include_router(deepfake_audio_router)
+app.include_router(deepfake_audio_router, prefix="/api")
 
 from pipelines.prompt_injection_website.api_routes import router as prompt_injection_router
-app.include_router(prompt_injection_router)
+app.include_router(prompt_injection_router, prefix="/api")
 
 @app.get("/api/health")
 async def health_check(request: Request):
