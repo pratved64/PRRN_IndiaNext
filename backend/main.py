@@ -96,6 +96,7 @@ app.include_router(sentinel_router, prefix="/api/sentinel", tags=["Sentinel"])
 
 from pipelines.deepfake_audio.audio_api_routes import router as audio_api_router
 app.include_router(audio_api_router)
+<<<<<<< HEAD
 
 # Include the Video Deepfake router
 from pipelines.video_deepfake.video_routes import router as video_router
@@ -104,6 +105,8 @@ app.include_router(video_router)
 # Include the Deepfake Audio API router
 from pipelines.deepfake_audio.api_routes import router as deepfake_audio_router
 app.include_router(deepfake_audio_router)
+=======
+>>>>>>> fb0b4fd (added backend routes)
 
 @app.get("/api/health")
 async def health_check(request: Request):
