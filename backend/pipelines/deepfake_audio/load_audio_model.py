@@ -1,4 +1,5 @@
 import torch
+import os
 from transformers import Wav2Vec2ForCTC, Wav2Vec2Processor
 
 DEVICE   = "cuda" if torch.cuda.is_available() else "cpu"
@@ -18,7 +19,8 @@ class LinearClassifier(torch.nn.Module):
     def forward(self, x):
         return self.fc(self.dropout(x))
 
-ckpt       = torch.load("classifier.pt", map_location=DEVICE)
+path_to_classifier = os.path.join(os.path.dirname(__file__), "classifier.pt")
+ckpt       = torch.load(path_to_classifier, map_location=DEVICE)
 classifier = LinearClassifier(ckpt["input_dim"]).to(DEVICE)
 classifier.load_state_dict(ckpt["model_state"])
 classifier.eval()

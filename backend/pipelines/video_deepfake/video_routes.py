@@ -11,12 +11,11 @@ import tempfile
 import os
 import anyio
 import cv2
-import numpy as np
 
 from fastapi import APIRouter, HTTPException, Request, UploadFile, File
 from pydantic import BaseModel
 
-from pipelines.video_deepfake.video_processor import extract_frames, detect_and_crop_faces
+from pipelines.video_deepfake.video_processor import extract_faces_from_video
 from pipelines.video_deepfake.deepfake_detector import run_inference, generate_attention_heatmap
 
 router = APIRouter(prefix="/analyze", tags=["Video Deepfake Analysis"])
@@ -50,18 +49,12 @@ def _run_pipeline(video_path: str, model, processor) -> dict:
     """
     Synchronous pipeline entry point — safe to call from a thread pool.
     Steps 5.3:
-      1. Extract frames
-      2. Detect & crop faces
-      3. Run ViT inference
-      4. Generate attention heatmap for the first face
+      1. Extract and crop faces from video
+      2. Run ViT inference
+      3. Generate attention heatmap for the first face
     """
-    # Phase 1: frame extraction
-    frames = extract_frames(video_path, fps=30)
-    if not frames:
-        raise ValueError("Could not extract any frames from the video.")
-
-    # Phase 2: face detection & cropping
-    face_crops = detect_and_crop_faces(frames)
+    # Phase 1 & 2: frame scanning + face detection & cropping (handled inside helper)
+    face_crops = extract_faces_from_video(video_path)
     if not face_crops:
         raise ValueError("No faces detected in the video. Cannot classify.")
 
