@@ -105,6 +105,9 @@ app.include_router(video_router)
 from pipelines.deepfake_audio.api_routes import router as deepfake_audio_router
 app.include_router(deepfake_audio_router)
 
+from pipelines.prompt_injection_website.api_routes import router as prompt_injection_router
+app.include_router(prompt_injection_router)
+
 @app.get("/api/health")
 async def health_check(request: Request):
     try:
