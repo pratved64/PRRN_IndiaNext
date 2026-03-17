@@ -1,6 +1,16 @@
-const API_BASE = 'http://localhost:8000';
+let API_BASE = 'http://localhost:8000';
 
 document.addEventListener('DOMContentLoaded', async () => {
+    // Load API_BASE from storage
+    const result = await chrome.storage.local.get(['api_base']);
+    if (result.api_base) {
+        API_BASE = result.api_base;
+    } else {
+        // Set default to 8001
+        API_BASE = 'http://localhost:8001';
+        chrome.storage.local.set({ api_base: API_BASE });
+    }
+    
     // Check backend health
     checkBackendHealth();
 
@@ -19,20 +29,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('scan-url-btn').addEventListener('click', handleManualUrlScan);
     document.getElementById('scan-text-btn').addEventListener('click', handleTextScan);
     document.getElementById('clear-blocklist-btn').addEventListener('click', handleClearBlocklist);
+    
+    // Load API base setting
+    loadApiBaseSetting();
 });
 
 async function checkBackendHealth() {
     try {
-        const res = await fetch(`${API_BASE}/api/health`);
+        console.log(`Checking backend health at: ${API_BASE}/api/health`);
+        const response = await fetch(`${API_BASE}/api/health`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+            signal: AbortSignal.timeout(5000) // 5 second timeout
+        });
+        
         const statusEl = document.getElementById('backend-status');
         const dotEl = document.getElementById('status-dot');
         
-        if (res.ok) {
+        if (response.ok) {
+            const data = await response.json();
             statusEl.textContent = 'CONNECTED';
             statusEl.style.color = 'var(--safe)';
             dotEl.className = 'status-indicator connected';
+            console.log('Backend health check successful:', data);
         } else {
-            throw new Error('Not OK');
+            throw new Error(`HTTP ${response.status}`);
         }
     } catch (e) {
         const statusEl = document.getElementById('backend-status');
@@ -40,6 +61,7 @@ async function checkBackendHealth() {
         statusEl.textContent = 'OFFLINE';
         statusEl.style.color = 'var(--malicious)';
         dotEl.className = 'status-indicator disconnected';
+        console.error('Backend health check failed:', e);
     }
 }
 
@@ -57,10 +79,12 @@ function formatVerdict(verdictRaw) {
     let cls = 'SAFE';
     let label = 'SAFE';
     
-    if (verdictRaw && (verdictRaw.includes('Medium') || verdictRaw === 'SUSPICIOUS')) {
+    const v = (verdictRaw || '').toLowerCase();
+    
+    if (v.includes('medium') || v.includes('suspicious')) {
         cls = 'SUSPICIOUS';
         label = 'SUSPICIOUS';
-    } else if (verdictRaw && (verdictRaw.includes('High') || verdictRaw === 'MALICIOUS')) {
+    } else if (v.includes('high') || v.includes('malicious') || v.includes('highly')) {
         cls = 'MALICIOUS';
         label = 'MALICIOUS';
     }
@@ -131,13 +155,17 @@ async function loadCurrentTabStatus() {
 }
 
 function renderScanResult(data, bannerEl, scoreEl, expEl) {
-    const riskScore = Math.round(data.risk_score * 100);
+    if (!data) return;
+    const riskScore = Math.round((data.risk_score || 0) * 100);
     bannerEl.innerHTML = formatVerdict(data.classification);
     scoreEl.innerHTML = formatScore(riskScore);
     
-    let html = data.classification + '<br><br>';
+    let html = (data.classification || 'Analysis Complete') + '<br><br>';
     if (data.highlighted_words && data.highlighted_words.length > 0) {
-        html += '<b>Key Suspicious Elements:</b> ' + data.highlighted_words.map(w => w.word).join(', ');
+        html += '<b>Key Suspicious Elements:</b> ' + data.highlighted_words.map(w => w.word || w).join(', ');
+    } else if (data.phishing_analysis) {
+        // Handle alternative response formats
+        html += data.phishing_analysis;
     }
     expEl.innerHTML = html;
 }
@@ -251,3 +279,26 @@ async function handleClearBlocklist() {
         });
     }
 }
+
+function loadApiBaseSetting() {
+    chrome.storage.local.get(['api_base'], (result) => {
+        const input = document.getElementById('api-base-input');
+        input.value = result.api_base || 'http://localhost:8001';
+    });
+}
+
+document.getElementById('save-api-btn').addEventListener('click', () => {
+    const input = document.getElementById('api-base-input');
+    const newApiBase = input.value.trim();
+    
+    if (newApiBase) {
+        chrome.storage.local.set({ api_base: newApiBase }, () => {
+            API_BASE = newApiBase;
+            // Update background script
+            chrome.runtime.sendMessage({ type: 'UPDATE_API_BASE', api_base: newApiBase });
+            // Re-check backend health
+            checkBackendHealth();
+            alert('API URL saved! Extension will use the new backend URL.');
+        });
+    }
+});

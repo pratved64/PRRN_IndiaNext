@@ -16,7 +16,7 @@ export default function PhishingAnalyzer() {
   
   const handleAnalyze = async (scenario: "threat" | "safe" = "threat") => {
     if (!inputText.trim()) return;
-    
+
     setIsAnalyzing(true);
     setResult(null);
 
