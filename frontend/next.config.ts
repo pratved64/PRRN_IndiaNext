@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
         // Proxy all /api/* calls to the FastAPI backend.
         // Change the destination port if your backend runs elsewhere.
         source: "/api/:path*",
-        destination: "http://localhost:8000/api/:path*",
+        destination: "https://lw53f94s-8000.inc1.devtunnels.ms/api/:path*",
       },
     ];
   },
