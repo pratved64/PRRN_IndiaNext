@@ -1,5 +1,7 @@
 import re
 import httpx
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # --- Step 2.2: Loopback Protection ---
 # Patterns that indicate internal/loopback/private network addresses (SSRF protection)
@@ -44,8 +46,20 @@ async def resolve_url(url: str) -> str:
     async with httpx.AsyncClient(
         follow_redirects=True,
         timeout=3.0,
+        verify=False,  # Disable SSL verification to handle certificates
     ) as client:
-        response = await client.head(url)
+        try:
+            response = await client.head(url)
+        except Exception as e:
+            # If the URL fails, try without https
+            if url.startswith("https://"):
+                try:
+                    http_url = url.replace("https://", "http://", 1)
+                    response = await client.head(http_url)
+                except Exception:
+                    raise e
+            else:
+                raise
 
     resolved_url = str(response.url)
 

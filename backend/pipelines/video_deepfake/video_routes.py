@@ -20,6 +20,7 @@ from pipelines.video_deepfake.video_processor import (
     extract_face_from_image,
 )
 from pipelines.video_deepfake.deepfake_detector import run_inference, generate_attention_heatmap
+from pipelines.shared.model_loader import get_vit_model
 
 router = APIRouter(prefix="/analyze", tags=["Media Deepfake Analysis"])
 
@@ -98,11 +99,10 @@ async def analyze_media_endpoint(
     if file is None:
         raise HTTPException(status_code=400, detail="No file uploaded. Please attach an image or video in 'file' field.")
 
-    model = request.app.state.vit_model
-    processor = request.app.state.vit_processor
-
-    if model is None or processor is None:
-        raise HTTPException(status_code=503, detail="Deepfake model is unavailable or still loading.")
+    try:
+        processor, model = await get_vit_model(request.app)
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Deepfake model failed to load: {str(e)}")
 
     content_type = file.content_type or ""
 

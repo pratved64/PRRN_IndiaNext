@@ -30,6 +30,12 @@ def translate_risk_score(score: float) -> str:
     """
     Step 4.3: Add the Translation Layer.
     Map the raw probability score to a string response for the frontend.
+
+    Frontend maps these prefixes to riskLevel:
+      "High Risk: ..."    → "Critical"
+      "Medium Risk: ..."  → "Medium"
+      "Low Risk: ..."     → "Low"
+      (anything else)     → "None"
     """
     if score >= 0.75:
         return "High Risk: Phishing Attempt Detected"
@@ -42,13 +48,19 @@ def translate_risk_score(score: float) -> str:
 @router.post("/text", response_model=ThreatResponse)
 async def analyze_text_endpoint(request_data: ThreatRequest, request: Request):
     """
-    Step 4.1 & 4.2: ThreatRequest / ThreatResponse schemas and POST endpoint
+    Step 4.1 & 4.2: ThreatRequest / ThreatResponse schemas and POST endpoint.
+
+    Contract consumed by PhishingAnalyzer.tsx:
+      POST /api/analyze/text
+      Body:    { text: string }
+      Returns: { risk_score: float, classification: string, highlighted_words: {word, score}[] }
     """
-    model = request.app.state.model
-    tokenizer = request.app.state.tokenizer
-    
-    if model is None or tokenizer is None:
-        raise HTTPException(status_code=503, detail="Phishing Models are currently unavailable or still loading.")
+    try:
+        # Lazy load the model
+        from main import get_phishing_model
+        tokenizer, model = await get_phishing_model(request.app)
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Phishing Models failed to load: {str(e)}")
 
     try:
         # Run the heavy PyTorch logic
@@ -73,5 +85,3 @@ async def analyze_text_endpoint(request_data: ThreatRequest, request: Request):
     except Exception as e:
         # RULES.md: Fail Gracefully
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
-
-

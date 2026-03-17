@@ -15,12 +15,13 @@ interface Message {
 export default function ChatBot() {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
+  const [isMounted, setIsMounted] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "init",
       role: "bot",
       content: "Hi there! 👋 I am Kawach, your personal AI Assistant. How can I protect and assist you today?",
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      timestamp: ""
     }
   ]);
   const [isTyping, setIsTyping] = useState(false);
@@ -28,10 +29,22 @@ export default function ChatBot() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
+  // Set initial message timestamp on client only
+  useEffect(() => {
+    setIsMounted(true);
+    setMessages(prev => 
+      prev[0].timestamp === "" 
+        ? [{...prev[0], timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}]
+        : prev
+    );
+  }, []);
+
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isTyping]);
+    if (isMounted) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, isTyping, isMounted]);
 
   const handleSend = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
