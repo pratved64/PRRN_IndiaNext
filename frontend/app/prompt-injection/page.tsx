@@ -5,10 +5,10 @@ import ExplainabilityCard from "@/components/ExplainabilityCard";
 import DashboardNav from "@/components/DashboardNav";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { useTheme } from "@/lib/ThemeContext";
-import { analyzePhishingText, ThreatResult } from "@/lib/api";
+import { analyzePromptInjection, ThreatResult } from "@/lib/api";
 import { saveScan } from "@/lib/scanHistory";
 
-export default function PhishingAnalyzer() {
+export default function PromptInjectionAnalyzer() {
   const [inputText, setInputText] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState<ThreatResult | null>(null);
@@ -22,42 +22,19 @@ export default function PhishingAnalyzer() {
     setResult(null);
 
     try {
-      if (scenario === "safe") {
-        // Since backend requires actual text, we can still do a mock or just send safe text
-        // But the prompt wants actual backend calls. We'll send the input text to the backend.
-        // We will run it against the backend for authenticity.
-        const res = await analyzePhishingText(inputText);
-        setResult(res);
-        
-        // Save scan to history
-        const riskScore = res.confidence / 100;
-        saveScan({
-          tool: "phishing",
-          input_preview: inputText.substring(0, 80),
-          verdict: riskScore >= 0.7 ? "MALICIOUS" 
-                   : riskScore >= 0.4 ? "SUSPICIOUS" 
-                   : "SAFE",
-          risk_score: res.confidence,
-          classification: res.threatType,
-          details: res
-        });
-      } else {
-        const res = await analyzePhishingText(inputText);
-        setResult(res);
-        
-        // Save scan to history
-        const riskScore = res.confidence / 100;
-        saveScan({
-          tool: "phishing",
-          input_preview: inputText.substring(0, 80),
-          verdict: riskScore >= 0.7 ? "MALICIOUS" 
-                   : riskScore >= 0.4 ? "SUSPICIOUS" 
-                   : "SAFE",
-          risk_score: res.confidence,
-          classification: res.threatType,
-          details: res
-        });
-      }
+      const res = await analyzePromptInjection(inputText);
+      setResult(res);
+      
+      // Save scan to history
+      saveScan({
+        tool: "prompt_injection",
+        input_preview: inputText.substring(0, 80),
+        verdict: res.classification === "PROMPT INJECTION"
+                 ? "PROMPT INJECTION" : "SAFE",
+        risk_score: res.confidence,
+        classification: res.classification || "Unknown",
+        details: res
+      });
     } catch (error: unknown) {
       console.error(error);
       setResult({
@@ -141,10 +118,10 @@ export default function PhishingAnalyzer() {
         {/* Header Title */}
         <header className="mb-10">
           <h1 className="text-4xl md:text-5xl font-light tracking-tight text-white mb-2">
-            {t('ts.title') || "Threat "} <span className="font-bold">{t('ts.title2') || "Analyzer"}</span>
+            Prompt <span className="font-bold">Injection</span>
           </h1>
           <p className="text-neutral-400 font-mono text-sm uppercase tracking-widest border-l-2 border-white/20 pl-3">
-            {t('ts.subtitle') || "Module // Text & Payload Inspection Engine"}
+            Module // AI Safety & Prompt Injection Detection
           </p>
         </header>
 
@@ -159,7 +136,7 @@ export default function PhishingAnalyzer() {
               <div className="w-3 h-3 rounded-full bg-green-500/20 border border-green-500/50"></div>
             </div>
             <div className="text-xs font-mono text-neutral-500 uppercase tracking-widest">
-              {t('ts.sandbox') || "Secure_Sandbox_Environment"}
+              AI_Safety_Sandbox
             </div>
           </div>
 
@@ -170,7 +147,7 @@ export default function PhishingAnalyzer() {
               {isAnalyzing && (
                 <div className="absolute inset-0 bg-black/60 z-20 flex flex-col items-center justify-center backdrop-blur-[2px]">
                   <div className="text-white font-mono text-sm uppercase tracking-widest mb-4 animate-pulse">
-                    {t('ts.running') || "Running Heuristic Analysis..."}
+                    Analyzing Prompt for Injection Patterns...
                   </div>
                   {/* Progress Bar Mock */}
                   <div className="w-48 h-1 bg-neutral-800 rounded-full overflow-hidden">
@@ -180,10 +157,11 @@ export default function PhishingAnalyzer() {
               )}
 
               <textarea
-                id="payload"
+                id="prompt"
                 rows={8}
                 className="w-full p-6 bg-transparent text-neutral-300 font-mono text-sm placeholder-neutral-700 outline-none resize-y relative z-10 leading-relaxed"
-                placeholder={t('ts.placeholder') || "[ INITIALIZE INPUT ] \n> Paste suspicious email headers, raw SMS text, or malicious code blocks here..."}
+                placeholder="[ ENTER PROMPT ] 
+> Test prompts for potential injection attacks, jailbreak attempts, or malicious instructions..."
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 disabled={isAnalyzing}
@@ -197,12 +175,12 @@ export default function PhishingAnalyzer() {
               {/* Console Bottom Status Bar */}
               <div className="bg-neutral-950/80 px-4 py-2 flex justify-between items-center text-[10px] md:text-xs font-mono text-neutral-500 uppercase border-t border-white/5">
                 <div className="flex gap-4 md:gap-8">
-                  <span>{t('ts.type') || "Type: RAW_TEXT"}</span>
-                  <span>{t('ts.enc') || "Enc: UTF-8"}</span>
+                  <span>Type: PROMPT</span>
+                  <span>Enc: UTF-8</span>
                 </div>
                 <div className="flex gap-4 md:gap-8">
-                  <span>{t('ts.ln') || "Ln: "} {inputText ? lineCount : 0}</span>
-                  <span>{t('ts.size') || "Size: "} {byteSize} Bytes</span>
+                  <span>Ln: {inputText ? lineCount : 0}</span>
+                  <span>Size: {byteSize} Bytes</span>
                 </div>
               </div>
             </div>
@@ -215,7 +193,7 @@ export default function PhishingAnalyzer() {
               disabled={isAnalyzing || !inputText}
               className="text-xs font-mono uppercase tracking-widest text-neutral-500 hover:text-white transition disabled:opacity-30 w-full md:w-auto text-left md:text-center"
             >
-              {t('ts.clear') || "[ Clear Payload ]"}
+              [ Clear Prompt ]
             </button>
 
             <div className="flex gap-3 w-full md:w-auto">
@@ -224,7 +202,7 @@ export default function PhishingAnalyzer() {
                 disabled={isAnalyzing || !inputText}
                 className="flex-1 md:flex-none px-6 py-3 text-xs md:text-sm font-mono uppercase tracking-widest text-neutral-400 border border-white/10 rounded hover:bg-white/10 hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
               >
-                {t('ts.simSafe') || "Simulate Safe"}
+                Test Safe Prompt
               </button>
 
               <button
@@ -232,7 +210,7 @@ export default function PhishingAnalyzer() {
                 disabled={isAnalyzing || !inputText}
                 className="flex-1 md:flex-none px-8 py-3 text-xs md:text-sm font-mono font-bold uppercase tracking-widest bg-white text-black rounded hover:bg-neutral-200 hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all disabled:bg-neutral-800 disabled:text-neutral-500 disabled:shadow-none disabled:cursor-not-allowed"
               >
-                {isAnalyzing ? (t('ts.processing') || "Processing") : (t('ts.execute') || "Execute Scan")}
+                {isAnalyzing ? "Analyzing" : "Analyze Prompt"}
               </button>
             </div>
           </div>

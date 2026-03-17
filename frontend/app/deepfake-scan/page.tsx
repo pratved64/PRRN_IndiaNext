@@ -6,6 +6,7 @@ import DashboardNav from "@/components/DashboardNav";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { useTheme } from "@/lib/ThemeContext";
 import { processDeepfakeMedia, ThreatResult } from "@/lib/api";
+import { saveScan } from "@/lib/scanHistory";
 
 export default function DeepfakeScanner() {
   const [file, setFile] = useState<File | null>(null);
@@ -190,6 +191,34 @@ export default function DeepfakeScanner() {
       }
 
       setResult(result);
+      
+      // Save scan to history
+      const isAudio = file.type.startsWith("audio/");
+      if (isAudio) {
+        // Audio deepfake detection
+        saveScan({
+          tool: "deepfake_audio",
+          input_preview: file.name,
+          verdict: result.rawLabel === "AI Generated" 
+                   ? "AI GENERATED" : "REAL HUMAN",
+          risk_score: Math.round((result.fakeProb || 0) * 100),
+          classification: `${result.rawLabel} — ${result.severity}`,
+          details: result
+        });
+      } else {
+        // Media deepfake detection
+        const riskScore = result.confidence / 100;
+        saveScan({
+          tool: "deepfake_media",
+          input_preview: file.name,
+          verdict: riskScore >= 0.7 ? "MALICIOUS"
+                   : riskScore >= 0.4 ? "SUSPICIOUS"
+                   : "SAFE",
+          risk_score: result.confidence,
+          classification: result.classification || result.threatType,
+          details: result
+        });
+      }
     } catch (error) {
       console.error('Media analysis failed:', error);
       setResult({

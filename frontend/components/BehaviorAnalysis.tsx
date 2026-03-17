@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { runSentinelAnalyze } from "@/lib/api";
+import { saveScan } from "@/lib/scanHistory";
 import { useTheme } from "@/lib/ThemeContext";
 
 interface Scenario {
@@ -149,6 +150,16 @@ export default function BehaviorAnalysis() {
     try {
       const data = await runSentinelAnalyze(parsed);
       setResult(data);
+      
+      // Save scan to history
+      saveScan({
+        tool: "behavior",
+        input_preview: `${parsed.user_id} — ${parsed.city}`,
+        verdict: data.verdict,
+        risk_score: data.severityScore || 0,
+        classification: data.highestSeverityRule || data.verdict,
+        details: data
+      });
     } catch (err: any) {
       setError(err.message || "API call failed. Ensure sentinel backend is running.");
     } finally {

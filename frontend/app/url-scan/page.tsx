@@ -6,6 +6,7 @@ import DashboardNav from "@/components/DashboardNav";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { useTheme } from "@/lib/ThemeContext";
 import { analyzeUrl, ThreatResult } from "@/lib/api";
+import { saveScan } from "@/lib/scanHistory";
 
 export default function UrlScanner() {
   const [url, setUrl] = useState("");
@@ -23,6 +24,19 @@ export default function UrlScanner() {
     try {
       const res = await analyzeUrl(url);
       setResult(res);
+      
+      // Save scan to history
+      const riskScore = res.confidence / 100;
+      saveScan({
+        tool: "url",
+        input_preview: url.substring(0, 80),
+        verdict: riskScore >= 0.7 ? "MALICIOUS"
+                 : riskScore >= 0.4 ? "SUSPICIOUS"
+                 : "SAFE",
+        risk_score: res.confidence,
+        classification: res.threatType,
+        details: res
+      });
     } catch (error: unknown) {
       console.error(error);
       setResult({

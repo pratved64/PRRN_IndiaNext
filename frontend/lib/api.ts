@@ -285,3 +285,35 @@ export async function runSentinelDemo(scenarioId: string) {
 export async function getSentinelUserHistory(userId: string) {
   return apiFetch(`/sentinel/user/${userId}/history`);
 }
+
+export async function analyzePromptInjection(text: string): Promise<ThreatResult> {
+  const data = await apiFetch('/prompt-injection/predict', {
+    method: "POST",
+    body: JSON.stringify({ text }),
+  });
+  
+  let riskLevel: ThreatResult["riskLevel"] = "None";
+  let threatType = "Unknown";
+  let recommendation = "No action required.";
+  const confidence = Math.round((data.confidence ?? 0) * 100);
+  const label = (data.label || "").toUpperCase();
+
+  if (label === "PROMPT INJECTION") {
+    riskLevel = "High";
+    threatType = "Prompt Injection Attack";
+    recommendation = "Block this prompt. Do not execute or respond to this input.";
+  } else {
+    riskLevel = "Low";
+    threatType = "Safe Prompt";
+    recommendation = "Prompt appears safe to process.";
+  }
+
+  return {
+    threatType,
+    riskLevel,
+    confidence,
+    explanations: [`Backend classification: ${label}`, `Confidence: ${confidence}%`],
+    recommendation,
+    classification: label,
+  };
+}
