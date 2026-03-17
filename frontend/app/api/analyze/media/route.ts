@@ -14,6 +14,7 @@ export async function POST(request: NextRequest) {
       headers: {
         // preserve content-type boundary so the backend sees the file
         "content-type": request.headers.get("content-type") || "",
+        "ngrok-skip-browser-warning": "true",
       },
       body: request.body,
     };

@@ -38,7 +38,41 @@ export interface BackendResponse {
   highlighted_words?: { word: string; score: number }[];
   original_url?: string;
   resolved_url?: string;
-  // Adjust for any deepfake-specific fields you might return later on
+}
+
+/**
+ * Unified fetch wrapper to handle ngrok headers and JSON serialization
+ */
+async function apiFetch(
+  path: string, 
+  options: RequestInit = {}
+): Promise<any> {
+  // Ensure path starts with /
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  const url = `${API_BASE}${cleanPath.replace(/^\/api/, "")}`;
+  
+  // Merge ngrok header with any existing headers
+  const headers = {
+    ...(options.headers || {}),
+    'ngrok-skip-browser-warning': 'true',
+  };
+  
+  // Only set Content-Type for non-FormData requests
+  if (!(options.body instanceof FormData)) {
+    (headers as any)['Content-Type'] = 'application/json';
+  }
+  
+  const res = await fetch(url, { 
+    ...options, 
+    headers 
+  });
+  
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`API ${path} failed: ${res.status} — ${text}`);
+  }
+  
+  return res.json();
 }
 
 function mapBackendToUI(response: BackendResponse, type: "phishing" | "url" | "deepfake" = "phishing"): ThreatResult {
@@ -62,7 +96,7 @@ function mapBackendToUI(response: BackendResponse, type: "phishing" | "url" | "d
   if (type === "phishing") {
     if (riskLevel === "High" || (riskLevel as string) === "Critical") {
       threatType = "Spear Phishing / Credential Harvesting";
-      riskLevel = "High"; // Maintain type safety with ThreatResult["riskLevel"]
+      riskLevel = "High";
       recommendation = "Quarantine email across all organizational inboxes. Block sender IP. Do not click links.";
     } else if (riskLevel === "Medium") {
       threatType = "Suspicious Communication";
@@ -71,10 +105,9 @@ function mapBackendToUI(response: BackendResponse, type: "phishing" | "url" | "d
       threatType = "Standard Communication";
       riskLevel = "None";
       recommendation = "No action required. Communication appears benign.";
-      // Clean up low-risk explanations
       explanations.length = 0;
     }
-} else if (type === "url") {
+  } else if (type === "url") {
     if (riskLevel === "High" || (riskLevel as string) === "Critical") {
       threatType = "Malicious URL Detected";
       if (response.original_url !== response.resolved_url) {
@@ -104,36 +137,18 @@ function mapBackendToUI(response: BackendResponse, type: "phishing" | "url" | "d
 }
 
 export async function analyzePhishingText(text: string): Promise<ThreatResult> {
-  const response = await fetch(`${API_BASE}/analyze/text`, {
+  const data = await apiFetch('/analyze/text', {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
     body: JSON.stringify({ text }),
   });
-
-  if (!response.ok) {
-    throw new Error(`Phishing API error: ${response.statusText}`);
-  }
-
-  const data: BackendResponse = await response.json();
   return mapBackendToUI(data, "phishing");
 }
 
 export async function analyzeUrl(url: string): Promise<ThreatResult> {
-  const response = await fetch(`${API_BASE}/analyze/url`, {
+  const data = await apiFetch('/analyze/url', {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
     body: JSON.stringify({ url }),
   });
-
-  if (!response.ok) {
-    throw new Error(`URL API error: ${response.statusText}`);
-  }
-
-  const data: BackendResponse = await response.json();
   return mapBackendToUI(data, "url");
 }
 
@@ -160,23 +175,10 @@ export async function processDeepfakeMedia(file: File): Promise<ThreatResult> {
   const isAudio = file.type.startsWith("audio/");
   const endpoint = isAudio ? "/deepfake-audio/predict" : "/analyze/media";
 
-  const response = await fetch(`${API_BASE}${endpoint}`, {
+  const data = await apiFetch(endpoint, {
     method: "POST",
     body: formData,
   });
-
-  if (!response.ok) {
-    // try to surface backend detail for easier debugging
-    try {
-      const errBody = await response.json();
-      const detail = (errBody && (errBody.detail || errBody.message)) ?? "";
-      throw new Error(`Media API error: ${response.statusText}${detail ? ` — ${detail}` : ""}`);
-    } catch {
-      throw new Error(`Media API error: ${response.statusText}`);
-    }
-  }
-
-  const data = await response.json();
 
   let riskLevel: ThreatResult["riskLevel"] = "None";
   let threatType = "Unknown";
@@ -193,7 +195,6 @@ export async function processDeepfakeMedia(file: File): Promise<ThreatResult> {
     const severity = audio.severity ?? undefined;
     const fakeP = fakeProb ?? 0;
 
-    // Risk mapping driven by fake probability
     if (fakeP >= 0.9) riskLevel = "Critical";
     else if (fakeP >= 0.7) riskLevel = "High";
     else if (fakeP >= 0.4) riskLevel = "Medium";
@@ -225,7 +226,6 @@ export async function processDeepfakeMedia(file: File): Promise<ThreatResult> {
     const score = video.risk_score ?? 0;
     confidence = Math.round(score * 100);
 
-    // Risk mapping driven by risk score (1.0 = Fake)
     if (score >= 0.7) {
       riskLevel = "High";
       threatType = "High Risk Visual Media (Possible Deepfake)";
@@ -262,32 +262,26 @@ export async function processDeepfakeMedia(file: File): Promise<ThreatResult> {
 
 // Sentinel AI behavior analytics
 export async function getSentinelHealth() {
-  const res = await fetch(`${BASE_URL}/api/sentinel/health`);
-  return res.json();
+  return apiFetch('/sentinel/health');
 }
 
 export async function getSentinelDemoScenarios() {
-  const res = await fetch(`${BASE_URL}/api/sentinel/demo-scenarios`);
-  return res.json();
+  return apiFetch('/sentinel/demo-scenarios');
 }
 
 export async function runSentinelAnalyze(event: any) {
-  const res = await fetch(`${BASE_URL}/api/sentinel/analyze`, {
+  return apiFetch('/sentinel/analyze', {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(event),
   });
-  return res.json();
 }
 
 export async function runSentinelDemo(scenarioId: string) {
-  const res = await fetch(`${BASE_URL}/api/sentinel/demo/${scenarioId}`, {
+  return apiFetch(`/sentinel/demo/${scenarioId}`, {
     method: "POST"
   });
-  return res.json();
 }
 
 export async function getSentinelUserHistory(userId: string) {
-  const res = await fetch(`${BASE_URL}/api/sentinel/user/${userId}/history`);
-  return res.json();
+  return apiFetch(`/sentinel/user/${userId}/history`);
 }

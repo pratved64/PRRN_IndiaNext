@@ -2,11 +2,20 @@ import './globals.css';
 import { LanguageProvider } from '@/lib/i18n/LanguageContext';
 import { ThemeProvider } from '@/lib/ThemeContext';
 import CyberBot from '@/components/CyberBot'; // <-- 1. Import the Tactical Assistant
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'abhedya.sec — AI Cybersecurity',
+  description: 'Real-time AI threat detection',
+  icons: {
+    icon: '/favicon.ico',
+  },
+};
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body className="bg-gray-50 text-gray-900">
+    <html lang="en" suppressHydrationWarning>
+      <body className="bg-gray-50 text-gray-900" suppressHydrationWarning>
         <ThemeProvider>
           <LanguageProvider>
             

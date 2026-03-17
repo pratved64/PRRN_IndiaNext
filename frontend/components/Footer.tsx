@@ -15,7 +15,7 @@ function formatIST(d: Date): string {
 }
 
 export default function Footer(): React.JSX.Element {
-  const [clock, setClock] = useState<string>(() => `IST // ${formatIST(new Date())}`);
+  const [clock, setClock] = useState<string>("");
   const [threats, setThreats] = useState<number>(0);
 
   const counterRafRef = useRef<number | null>(null);
@@ -42,6 +42,9 @@ export default function Footer(): React.JSX.Element {
   );
 
   useEffect(() => {
+    // Set initial clock on mount
+    setClock(`IST // ${formatIST(new Date())}`);
+    
     const id = window.setInterval(() => {
       setClock(`IST // ${formatIST(new Date())}`);
     }, 1000);

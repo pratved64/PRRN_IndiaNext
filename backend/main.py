@@ -93,7 +93,13 @@ app = FastAPI(title="PRRN IndiaNext — Unified Backend", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://abhedyasec.vercel.app",
+        "https://*.vercel.app",
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "*"
+    ],
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -101,6 +107,12 @@ app.add_middleware(
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("backend")
+
+@app.middleware("http")
+async def add_ngrok_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["ngrok-skip-browser-warning"] = "true"
+    return response
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next) -> Response:

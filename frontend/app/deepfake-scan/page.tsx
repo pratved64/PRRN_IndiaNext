@@ -12,7 +12,12 @@ export default function DeepfakeScanner() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState<ThreatResult | null>(null);
-  const [sessionId] = useState(() => `MED-${Math.random().toString(36).substring(2, 8).toUpperCase()}`);
+  const [sessionId, setSessionId] = useState("");
+  
+  useEffect(() => {
+    setSessionId(`MED-${Math.random().toString(36).substring(2, 8).toUpperCase()}`);
+  }, []);
+
   const { theme, toggleTheme, themeStyle } = useTheme();
   const { t } = useLanguage();
 
@@ -27,6 +32,32 @@ export default function DeepfakeScanner() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioProgress, setAudioProgress] = useState(0);
   const [audioDuration, setAudioDuration] = useState(0);
+  const [audioBarStyles, setAudioBarStyles] = useState<{delay: string, height: string}[]>([]);
+
+  // Initialize audio bar styles on client
+  useEffect(() => {
+    setAudioBarStyles(Array.from({ length: 48 }).map(() => ({
+      delay: `${Math.random() * 1.5}s`,
+      height: '10%'
+    })));
+  }, []);
+
+  // Update heights during playback
+  useEffect(() => {
+    if (!isPlaying) {
+      setAudioBarStyles(prev => prev.map(s => ({ ...s, height: '10%' })));
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setAudioBarStyles(Array.from({ length: 48 }).map(() => ({
+        delay: `${Math.random() * 1.5}s`,
+        height: `${Math.max(20, Math.random() * 100)}%`
+      })));
+    }, 150);
+    
+    return () => clearInterval(interval);
+  }, [isPlaying]);
 
   // Handle Audio Time Update
   const handleTimeUpdate = () => {
@@ -64,8 +95,9 @@ export default function DeepfakeScanner() {
     
     for (let i = 0; i <= numPoints; i++) {
       const percent = i / numPoints;
-      // Base noise
-      let val = isThreat ? 80 + Math.random() * 15 : 95 + Math.random() * 5; 
+      // Base value without random to avoid hydration issues if ever rendered server-side
+      // though this is in useEffect so it's safe.
+      let val = isThreat ? 85 : 97.5; 
       const timeSec = percent * duration; 
       
       // Add spikes where markers are
@@ -337,13 +369,13 @@ export default function DeepfakeScanner() {
 
                     {/* Cyber Audio Waveform Visualizer */}
                     <div className="flex items-center justify-center gap-[3px] h-32 w-full mb-8 max-w-2xl px-4">
-                      {Array.from({ length: 48 }).map((_, i) => (
+                      {audioBarStyles.map((style, i) => (
                         <div 
                           key={i} 
                           className={`w-2 md:w-3 bg-cyan-400 rounded-sm audio-bar ${isPlaying ? 'playing' : ''}`}
                           style={{ 
-                            animationDelay: `${Math.random() * 1.5}s`,
-                            height: isPlaying ? `${Math.max(20, Math.random() * 100)}%` : '10%',
+                            animationDelay: style.delay,
+                            height: style.height,
                             opacity: isAnalyzing ? 0.3 : 1,
                             transition: 'height 0.3s ease'
                           }}
