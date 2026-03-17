@@ -1,0 +1,6 @@
+echo "3.11.8" > runtime.txt
+```
+
+And if you have a `requirements.txt`, pin NumPy explicitly to ensure the wheel is used:
+```
+numpy==1.26.4
