@@ -20,6 +20,16 @@ export interface ThreatResult {
   attentionMap?: number[];
   resolvedUrl?: string;
   originalUrl?: string;
+  // Sentinel specifics
+  verdict?: string;
+  severityScore?: number;
+  rulesFired?: string[];
+  highestSeverityRule?: string;
+  shapFeatures?: any[];
+  autoencoderFeatureErrors?: any[];
+  narrative?: string;
+  fusionBreakdown?: any;
+  processingTimeMs?: number;
 }
 
 export interface BackendResponse {
@@ -37,9 +47,9 @@ function mapBackendToUI(response: BackendResponse, type: "phishing" | "url" | "d
   let recommendation = "No action required.";
   const confidence = Math.round(response.risk_score * 100);
 
-  if (response.risk_score >= 0.75) {
-    riskLevel = "High"; // or Critical depending on UI needs
-  } else if (response.risk_score >= 0.40) {
+  if (response.risk_score >= 0.7) {
+    riskLevel = "High";
+  } else if (response.risk_score >= 0.4) {
     riskLevel = "Medium";
   } else {
     riskLevel = "Low";
@@ -50,9 +60,9 @@ function mapBackendToUI(response: BackendResponse, type: "phishing" | "url" | "d
     : [];
 
   if (type === "phishing") {
-    if (riskLevel === "High" || riskLevel === "Critical") {
+    if (riskLevel === "High" || (riskLevel as string) === "Critical") {
       threatType = "Spear Phishing / Credential Harvesting";
-      riskLevel = "Critical"; // Mapping to the UI's existing red badge
+      riskLevel = "High"; // Maintain type safety with ThreatResult["riskLevel"]
       recommendation = "Quarantine email across all organizational inboxes. Block sender IP. Do not click links.";
     } else if (riskLevel === "Medium") {
       threatType = "Suspicious Communication";
@@ -64,8 +74,8 @@ function mapBackendToUI(response: BackendResponse, type: "phishing" | "url" | "d
       // Clean up low-risk explanations
       explanations.length = 0;
     }
-  } else if (type === "url") {
-    if (riskLevel === "High" || riskLevel === "Critical") {
+} else if (type === "url") {
+    if (riskLevel === "High" || (riskLevel as string) === "Critical") {
       threatType = "Malicious URL Detected";
       if (response.original_url !== response.resolved_url) {
         explanations.push(`URL Redirect detected: '${response.original_url}' resolves to '${response.resolved_url}'`);
@@ -215,25 +225,22 @@ export async function processDeepfakeMedia(file: File): Promise<ThreatResult> {
     const score = video.risk_score ?? 0;
     confidence = Math.round(score * 100);
 
-    // Updated business rule (video):
-    // >=60%  -> Low risk (authentic)
-    // >40%   -> Medium risk
-    // <=40%  -> High risk (potential deepfake)
-    if (score >= 0.6) {
-      riskLevel = "Low";
-      threatType = "Authentic Visual Media";
-      recommendation = "Media appears authentic with low deepfake risk.";
-      explanations.push(`Model score ${confidence}% meets authentic threshold (>= 60%).`);
-    } else if (score > 0.4) {
-      riskLevel = "Medium";
-      threatType = "Medium Risk Visual Media";
-      recommendation = "Proceed with caution. Consider secondary verification before trust.";
-      explanations.push(`Model score ${confidence}% falls in medium-risk band (40%-60%).`);
-    } else {
+    // Risk mapping driven by risk score (1.0 = Fake)
+    if (score >= 0.7) {
       riskLevel = "High";
       threatType = "High Risk Visual Media (Possible Deepfake)";
       recommendation = "Treat as potentially synthetic: quarantine and escalate for manual review.";
-      explanations.push(`Model score ${confidence}% is at or below 40%, indicating elevated deepfake risk.`);
+      explanations.push(`Model risk score ${confidence}% exceeds high-risk threshold (>= 70%).`);
+    } else if (score >= 0.4) {
+      riskLevel = "Medium";
+      threatType = "Medium Risk Visual Media";
+      recommendation = "Proceed with caution. Consider secondary verification before trust.";
+      explanations.push(`Model risk score ${confidence}% falls in medium-risk band (40%-70%).`);
+    } else {
+      riskLevel = "Low";
+      threatType = "Authentic Visual Media";
+      recommendation = "Media appears authentic with low deepfake risk.";
+      explanations.push(`Model risk score ${confidence}% is below suspicious thresholds.`);
     }
 
     if (video.classification) {
@@ -251,4 +258,36 @@ export async function processDeepfakeMedia(file: File): Promise<ThreatResult> {
       classification: video.classification,
     };
   }
+}
+
+// Sentinel AI behavior analytics
+export async function getSentinelHealth() {
+  const res = await fetch(`${BASE_URL}/api/sentinel/health`);
+  return res.json();
+}
+
+export async function getSentinelDemoScenarios() {
+  const res = await fetch(`${BASE_URL}/api/sentinel/demo-scenarios`);
+  return res.json();
+}
+
+export async function runSentinelAnalyze(event: any) {
+  const res = await fetch(`${BASE_URL}/api/sentinel/analyze`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(event),
+  });
+  return res.json();
+}
+
+export async function runSentinelDemo(scenarioId: string) {
+  const res = await fetch(`${BASE_URL}/api/sentinel/demo/${scenarioId}`, {
+    method: "POST"
+  });
+  return res.json();
+}
+
+export async function getSentinelUserHistory(userId: string) {
+  const res = await fetch(`${BASE_URL}/api/sentinel/user/${userId}/history`);
+  return res.json();
 }

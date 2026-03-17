@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         API_BASE = result.api_base;
     } else {
         // Set default to 8001
-        API_BASE = 'http://localhost:8001';
+        API_BASE = 'http://localhost:8000';
         chrome.storage.local.set({ api_base: API_BASE });
     }
     

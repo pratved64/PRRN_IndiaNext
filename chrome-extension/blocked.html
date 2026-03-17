@@ -1,33 +1,552 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <title>abhedya.sec — Threat Blocked</title>
-    <link rel="stylesheet" href="blocked.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>⚠ Threat Blocked — abhedya.sec</title>
+  <style>
+    /* Reset */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #0a0a0a;
+      color: #f1f5f9;
+      font-family: monospace;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    /* Animated danger background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% 50%,
+          rgba(239, 68, 68, 0.04) 0%,
+          transparent 70%);
+      animation: pulse-bg 3s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    @keyframes pulse-bg {
+
+      0%,
+      100% {
+        opacity: 0.5;
+      }
+
+      50% {
+        opacity: 1;
+      }
+    }
+
+    /* Shield icon */
+    .shield-wrapper {
+      width: 96px;
+      height: 96px;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 24px;
+      animation: shield-pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes shield-pulse {
+
+      0%,
+      100% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+      }
+
+      50% {
+        box-shadow: 0 0 0 16px rgba(239, 68, 68, 0.1);
+      }
+    }
+
+    .shield-icon {
+      font-size: 48px;
+      line-height: 1;
+    }
+
+    /* Branding */
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 32px;
+      opacity: 0.5;
+    }
+
+    .brand-dot {
+      width: 10px;
+      height: 10px;
+      background: white;
+      border-radius: 2px;
+    }
+
+    .brand-text {
+      font-size: 13px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+    }
+
+    /* Alert tag */
+    .alert-tag {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #ef4444;
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      padding: 4px 14px;
+      border-radius: 4px;
+      margin-bottom: 16px;
+    }
+
+    /* Main heading */
+    h1 {
+      font-size: 28px;
+      font-weight: bold;
+      color: white;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+
+    .subtitle {
+      font-size: 13px;
+      color: #64748b;
+      margin-bottom: 32px;
+      text-align: center;
+    }
+
+    /* Threat info card */
+    .threat-card {
+      background: #111111;
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      border-radius: 10px;
+      padding: 20px 24px;
+      width: 100%;
+      max-width: 520px;
+      margin-bottom: 24px;
+    }
+
+    .threat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      gap: 16px;
+    }
+
+    .threat-row:last-child {
+      border-bottom: none;
+    }
+
+    .threat-label {
+      font-size: 10px;
+      color: #475569;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      white-space: nowrap;
+    }
+
+    .threat-value {
+      font-size: 13px;
+      color: #f1f5f9;
+      text-align: right;
+      word-break: break-all;
+      max-width: 300px;
+    }
+
+    .threat-value.domain {
+      color: #ef4444;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    .threat-value.score-val {
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    /* Risk meter */
+    .risk-meter {
+      width: 100%;
+      max-width: 520px;
+      margin-bottom: 24px;
+    }
+
+    .risk-meter-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: #475569;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+
+    .risk-bar-bg {
+      width: 100%;
+      height: 6px;
+      background: #1e293b;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .risk-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.8s ease-out;
+    }
+
+    /* Warning text */
+    .warning-text {
+      font-size: 12px;
+      color: #475569;
+      text-align: center;
+      max-width: 480px;
+      line-height: 1.7;
+      margin-bottom: 28px;
+    }
+
+    /* Action buttons */
+    .action-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+      max-width: 520px;
+    }
+
+    .btn-safe {
+      width: 100%;
+      padding: 14px;
+      background: #ef4444;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+      transition: background 150ms;
+    }
+
+    .btn-safe:hover {
+      background: #dc2626;
+    }
+
+    .btn-proceed {
+      width: 100%;
+      padding: 11px;
+      background: transparent;
+      color: #475569;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 150ms;
+    }
+
+    .btn-proceed:hover {
+      border-color: rgba(255, 255, 255, 0.15);
+      color: #64748b;
+    }
+
+    /* Confirmation step */
+    .confirm-step {
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+      max-width: 520px;
+    }
+
+    .confirm-warning {
+      background: rgba(245, 158, 11, 0.08);
+      border: 1px solid rgba(245, 158, 11, 0.2);
+      border-radius: 6px;
+      padding: 12px 16px;
+      font-size: 12px;
+      color: #f59e0b;
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    .btn-cancel {
+      width: 100%;
+      padding: 12px;
+      background: #ef4444;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 150ms;
+    }
+
+    .btn-cancel:hover {
+      background: #dc2626;
+    }
+
+    .btn-accept-risk {
+      width: 100%;
+      padding: 10px;
+      background: transparent;
+      color: #334155;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 150ms;
+    }
+
+    .btn-accept-risk:hover {
+      color: #475569;
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Footer */
+    .footer {
+      position: fixed;
+      bottom: 20px;
+      font-size: 10px;
+      color: #1e293b;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+  </style>
 </head>
+
 <body>
-    <div class="overlay-content">
-        <div class="shield-container">
-            <div class="aura"></div>
-            <svg class="shield-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-            </svg>
-        </div>
-        
-        <h1>THREAT BLOCKED</h1>
-        <div class="url-display" id="blocked-url"></div>
-        <div class="verdict-badge" id="blocked-verdict"></div>
-        <div class="risk-score" id="blocked-score"></div>
-        <div class="explanation" id="blocked-explanation"></div>
-        
-        <div class="button-row">
-            <button id="go-back-btn" class="btn primary">← GO BACK</button>
-            <a href="#" id="proceed-link" class="proceed-link">Proceed Anyway (Unsafe)</a>
-        </div>
-        
-        <div class="powered-by">Protected by abhedya.sec</div>
+
+  <!-- Branding -->
+  <div class="brand">
+    <div class="brand-dot"></div>
+    <span class="brand-text">abhedya.sec</span>
+  </div>
+
+  <!-- Shield -->
+  <div class="shield-wrapper">
+    <span class="shield-icon">⛔</span>
+  </div>
+
+  <!-- Alert tag -->
+  <div class="alert-tag">⚠ Threat Detected</div>
+
+  <!-- Heading -->
+  <h1>Malicious Site Blocked</h1>
+  <p class="subtitle">
+    abhedya.sec AI Engine has flagged this site
+  </p>
+
+  <!-- Threat info card -->
+  <div class="threat-card">
+    <div class="threat-row">
+      <span class="threat-label">Site</span>
+      <span class="threat-value domain" id="domain-display">http://malware.testing.google.test/testing/malware/</span>
     </div>
-    
-    <script src="blocked.js"></script>
+    <div class="threat-row">
+      <span class="threat-label">Risk Score</span>
+      <span class="threat-value score-val" id="score-display" style="color:#ef4444">94/100</span>
+    </div>
+    <div class="threat-row">
+      <span class="threat-label">Classification</span>
+      <span class="threat-value" id="class-display">Malicious</span>
+    </div>
+    <div class="threat-row">
+      <span class="threat-label">Detected By</span>
+      <span class="threat-value" style="color:#94a3b8">
+        abhedya.sec AI Engine
+      </span>
+    </div>
+  </div>
+
+  <!-- Risk meter -->
+  <div class="risk-meter">
+    <div class="risk-meter-header">
+      <span>Threat Level</span>
+      <span id="score-pct">--</span>
+    </div>
+    <div class="risk-bar-bg">
+      <div class="risk-bar-fill" id="risk-bar" style="width:0%;background:#ef4444">
+      </div>
+    </div>
+  </div>
+
+  <!-- Warning text -->
+  <p class="warning-text">
+    This site has been identified as a potential
+    phishing or malware threat by abhedya.sec AI.
+    Proceeding may expose your personal data,
+    credentials, and device to serious risk.
+  </p>
+
+  <!-- Step 1: Action buttons -->
+  <div class="action-buttons" id="action-buttons">
+    <button class="btn-safe" id="btn-go-back">
+      ← Go Back to Safety
+    </button>
+    <button class="btn-proceed" id="btn-proceed">
+      Proceed Anyway (Not Recommended)
+    </button>
+  </div>
+
+  <!-- Step 2: Confirmation -->
+  <div class="confirm-step" id="confirm-step">
+    <div class="confirm-warning">
+      ⚠ You are about to visit a site flagged as
+      malicious. abhedya.sec is not responsible
+      for any harm, data loss, or security breach
+      that may result from continuing.
+    </div>
+    <button class="btn-cancel" id="btn-cancel">
+      Cancel — Take Me Back to Safety
+    </button>
+    <button class="btn-accept-risk" id="btn-accept-risk">
+      I Understand the Risk — Continue Anyway
+    </button>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    Protected by abhedya.sec · AI Cybersecurity
+  </div>
+
+  <script>
+    const params = new URLSearchParams(
+      window.location.search
+    );
+
+    const blockKey = params.get('key');
+    const scoreFallback = parseInt(
+      params.get('score') || '0'
+    );
+    const domainFallback = params.get('domain')
+      || 'Unknown Site';
+    const classFallback = params.get('classification')
+      || 'High Risk: Phishing Attempt Detected';
+
+    function populatePage(url, score, classification) {
+      let domain = domainFallback;
+      if (url) {
+        try { domain = new URL(url).hostname; }
+        catch (e) { domain = url || domainFallback; }
+      }
+
+      console.log('[blocked] Populating page:',
+        { domain, score, classification });
+
+      document.getElementById('domain-display')
+        .textContent = domain || 'Unknown Site';
+      document.getElementById('score-display')
+        .textContent = `${score}/100`;
+      document.getElementById('class-display')
+        .textContent = classification;
+      document.getElementById('score-pct')
+        .textContent = `${score}%`;
+
+      const bar = document.getElementById('risk-bar');
+      let barColor = '#22c55e';
+      if (score >= 40) barColor = '#f59e0b';
+      if (score >= 70) barColor = '#ef4444';
+      bar.style.background = barColor;
+      document.getElementById('score-display')
+        .style.color = barColor;
+
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          bar.style.width = `${Math.min(score, 100)}%`;
+        }, 100);
+      });
+
+      // Store for proceed button
+      window._blockedUrl = url;
+    }
+
+    // Try chrome.storage first (most reliable)
+    if (blockKey && typeof chrome !== 'undefined'
+      && chrome.storage) {
+      chrome.storage.local.get([blockKey], (result) => {
+        if (result[blockKey]) {
+          const d = result[blockKey];
+          console.log('[blocked] Got data from storage:',
+            d);
+          populatePage(d.url, d.score, d.classification);
+
+          // Clean up storage after reading
+          chrome.storage.local.remove([blockKey]);
+        } else {
+          console.log('[blocked] No storage data,',
+            'using URL params');
+          populatePage(null, scoreFallback, classFallback);
+        }
+      });
+    } else {
+      // Fallback to URL params
+      console.log('[blocked] Using URL params fallback');
+      populatePage(null, scoreFallback, classFallback);
+    }
+
+    // Go Back button
+    document.getElementById('btn-go-back')
+      .addEventListener('click', () => {
+        if (window.history.length > 1) {
+          window.history.back();
+        } else {
+          window.close();
+        }
+      });
+
+    // Proceed Anyway → show confirmation
+    document.getElementById('btn-proceed')
+      .addEventListener('click', () => {
+        document.getElementById('action-buttons')
+          .style.display = 'none';
+        document.getElementById('confirm-step')
+          .style.display = 'flex';
+      });
+
+    // Cancel
+    document.getElementById('btn-cancel')
+      .addEventListener('click', () => {
+        if (window.history.length > 1) {
+          window.history.back();
+        } else {
+          window.close();
+        }
+      });
+
+    // Accept risk — navigate to blocked URL
+    document.getElementById('btn-accept-risk')
+      .addEventListener('click', () => {
+        const target = window._blockedUrl;
+        if (target) {
+          window.location.href = target;
+        } else {
+          window.history.back();
+        }
+      });
+  </script>
 </body>
+
 </html>

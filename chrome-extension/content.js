@@ -1,220 +1,188 @@
-// Content Script for abhedya.sec Extension
+// content.js — abhedya.sec warning overlay
+// Listener must be at TOP LEVEL for MV3
 
-// Ensure we don't duplicate styles
-if (!document.getElementById('abhedya-styles')) {
-    const style = document.createElement('style');
-    style.id = 'abhedya-styles';
-    style.textContent = `
-      #abhedya-threat-overlay {
-        position: fixed;
-        top: 0; left: 0; right: 0; bottom: 0;
-        z-index: 999999;
-        background: rgba(10, 0, 0, 0.97);
-        color: #f1f5f9;
-        font-family: system-ui, -apple-system, monospace;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        
-        background-color: #0a0f1e;
-        background-size: 40px 40px;
-        background-image: linear-gradient(
-          to right, rgba(255,0,0,0.05) 1px, 
-          transparent 1px),
-          linear-gradient(
-          to bottom, rgba(255,0,0,0.05) 1px, 
-          transparent 1px);
-      }
-      .abhedya-overlay-content {
-        max-width: 600px;
-        padding: 40px;
-        background: #111827;
-        border: 1px solid #ef4444;
-        border-radius: 12px;
-        box-shadow: 0 0 40px rgba(239, 68, 68, 0.2);
-        animation: abhedyaFadeIn 0.3s ease-out;
-      }
-      
-      @keyframes abhedyaFadeIn {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-      }
-      
-      .abhedya-shield-icon {
-        font-size: 64px;
-        color: #ef4444;
-        margin-bottom: 20px;
-        filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.6));
-      }
-      
-      .abhedya-overlay-content h1 {
-        color: #ef4444;
-        font-size: 32px;
-        margin: 0 0 16px;
-        letter-spacing: 2px;
-        font-family: 'Courier New', monospace;
-      }
-      
-      .abhedya-url-display {
-        font-size: 18px;
-        color: #94a3b8;
-        word-break: break-all;
-        margin-bottom: 24px;
-        padding: 12px;
-        background: rgba(255,255,255,0.05);
-        border-radius: 6px;
-      }
-      
-      .abhedya-verdict-badge {
-        display: inline-block;
-        background: rgba(239, 68, 68, 0.1);
-        border: 1px solid #ef4444;
-        color: #ef4444;
-        padding: 8px 16px;
-        border-radius: 4px;
-        font-weight: bold;
-        letter-spacing: 1px;
-        margin-bottom: 12px;
-      }
-      
-      .abhedya-risk-score {
-        font-size: 48px;
-        font-weight: 900;
-        color: #ef4444;
-        margin-bottom: 16px;
-      }
-      
-      .abhedya-explanation {
-        color: #f1f5f9;
-        margin-bottom: 32px;
-        line-height: 1.6;
-      }
-      
-      .abhedya-button-row {
-        display: flex;
-        gap: 16px;
-        justify-content: center;
-        margin-bottom: 24px;
-      }
-      
-      .abhedya-btn {
-        padding: 12px 24px;
-        border: none;
-        border-radius: 6px;
-        font-family: monospace;
-        font-size: 14px;
-        cursor: pointer;
-        text-transform: uppercase;
-        font-weight: bold;
-        transition: all 0.2s;
-      }
-      
-      #go-back-btn {
-        background: #6366f1;
-        color: white;
-      }
-      #go-back-btn:hover {
-        background: #4f46e5;
-        box-shadow: 0 0 15px rgba(99,102,241,0.5);
-      }
-      
-      #proceed-btn {
-        background: transparent;
-        color: #94a3b8;
-        border: 1px solid #94a3b8;
-      }
-      #proceed-btn:hover {
-        background: rgba(255,255,255,0.05);
-        color: #ef4444;
-        border-color: #ef4444;
-      }
-      
-      .abhedya-powered-by {
-        color: #64748b;
-        font-size: 12px;
-        font-family: monospace;
-      }
-    `;
-    
-    // Inject styles as soon as document head exists
-    if (document.head) {
-        document.head.appendChild(style);
-    } else {
-        document.addEventListener('DOMContentLoaded', () => {
-             document.head.appendChild(style);
-        });
-    }
-}
-
-chrome.runtime.onMessage.addListener((message) => {
+chrome.runtime.onMessage.addListener(
+  function(message, sender, sendResponse) {
     if (message.type === 'SHOW_WARNING') {
-        if (document.body) {
-            showWarningOverlay(message.data);
-        } else {
-            // Use MutationObserver for high-performance body detection
-            const observer = new MutationObserver((mutations, obs) => {
-                if (document.body) {
-                    showWarningOverlay(message.data);
-                    obs.disconnect();
-                }
-            });
-            observer.observe(document.documentElement, { childList: true });
-            
-            // Fallback timeout
-            setTimeout(() => observer.disconnect(), 10000);
-        }
+      showWarningBanner(message.data);
+      sendResponse({ received: true });
     }
-    if (message.type === 'HIDE_WARNING') {
-        hideWarningOverlay();
-    }
-});
+    return true;
+  }
+);
 
-function showWarningOverlay(data) {
-    if (document.getElementById('abhedya-threat-overlay')) return;
-    
-    const overlay = document.createElement('div');
-    overlay.id = 'abhedya-threat-overlay';
-    
-    overlay.innerHTML = `
-      <div class="abhedya-overlay-content">
-        <div class="abhedya-shield-icon">🛡️</div>
-        <h1>THREAT DETECTED</h1>
-        <div class="abhedya-url-display">${data.url}</div>
-        <div class="abhedya-verdict-badge">${data.verdict}</div>
-        <div class="abhedya-risk-score">${data.score}/100</div>
-        <div class="abhedya-explanation">${data.explanation}</div>
-        <div class="abhedya-button-row">
-          <button id="go-back-btn" class="abhedya-btn">← GO BACK</button>
-          <button id="proceed-btn" class="abhedya-btn">PROCEED ANYWAY (UNSAFE)</button>
+function showWarningBanner(data) {
+  // Remove any existing banner
+  const existing = document.getElementById(
+    'abhedya-sec-warning'
+  );
+  if (existing) existing.remove();
+
+  // Extract display values safely
+  const domain = (() => {
+    try { return new URL(data.url).hostname; }
+    catch(e) { return data.url || 'this site'; }
+  })();
+  
+  const score = data.score || 0;
+  const explanation = data.explanation || 
+    'Malicious content detected';
+
+  // Create banner with all inline styles
+  // (no external CSS — works on any page)
+  const banner = document.createElement('div');
+  banner.id = 'abhedya-sec-warning';
+  
+  // Use all:initial to reset any page styles
+  banner.setAttribute('style', [
+    'all:initial',
+    'position:fixed',
+    'top:0',
+    'left:0',
+    'right:0',
+    'z-index:2147483647',
+    'background:#0a0a0a',
+    'border-bottom:2px solid #ef4444',
+    'padding:14px 20px',
+    'font-family:monospace',
+    'display:flex',
+    'align-items:center',
+    'justify-content:space-between',
+    'box-shadow:0 4px 40px rgba(239,68,68,0.35)',
+    'box-sizing:border-box',
+    'gap:12px'
+  ].join(';'));
+
+  banner.innerHTML = `
+    <div style="
+      display:flex;
+      align-items:center;
+      gap:12px;
+      font-family:monospace;
+      flex:1;
+      min-width:0
+    ">
+      <span style="
+        background:#ef4444;
+        color:#ffffff;
+        padding:5px 12px;
+        border-radius:4px;
+        font-size:11px;
+        font-weight:bold;
+        letter-spacing:1px;
+        white-space:nowrap;
+        font-family:monospace
+      ">⚠ THREAT DETECTED</span>
+      <div style="
+        font-family:monospace;
+        min-width:0;
+        flex:1
+      ">
+        <div style="
+          color:#ef4444;
+          font-weight:bold;
+          font-size:14px;
+          font-family:monospace;
+          white-space:nowrap;
+          overflow:hidden;
+          text-overflow:ellipsis
+        ">${domain}</div>
+        <div style="
+          color:#94a3b8;
+          font-size:11px;
+          margin-top:3px;
+          font-family:monospace;
+          white-space:nowrap;
+          overflow:hidden;
+          text-overflow:ellipsis
+        ">
+          Risk Score: ${score}/100 
+          &nbsp;·&nbsp; 
+          ${explanation}
         </div>
-        <div class="abhedya-powered-by">Protected by abhedya.sec</div>
       </div>
-    `;
-    
-    document.body.appendChild(overlay);
-    
-    // Block scrolling
-    document.body.style.overflow = 'hidden';
-    
-    document.getElementById('go-back-btn').addEventListener('click', () => {
-        window.history.back();
-        // Failsafe if history.back doesn't work (e.g. no history)
-        setTimeout(() => {
-            window.location.href = 'about:blank';
-        }, 500);
-    });
-    
-    document.getElementById('proceed-btn').addEventListener('click', () => {
-        // Remove overlay
-        hideWarningOverlay();
-    });
-}
+    </div>
+    <div style="
+      display:flex;
+      gap:8px;
+      flex-shrink:0
+    ">
+      <button id="abhedya-leave-btn" style="
+        all:initial;
+        background:#ef4444;
+        color:#ffffff;
+        border:none;
+        padding:9px 18px;
+        border-radius:4px;
+        cursor:pointer;
+        font-family:monospace;
+        font-size:12px;
+        font-weight:bold;
+        white-space:nowrap;
+        display:inline-block
+      ">← Leave Site</button>
+      <button id="abhedya-dismiss-btn" style="
+        all:initial;
+        background:transparent;
+        color:#475569;
+        border:1px solid rgba(255,255,255,0.12);
+        padding:9px 14px;
+        border-radius:4px;
+        cursor:pointer;
+        font-family:monospace;
+        font-size:11px;
+        white-space:nowrap;
+        display:inline-block
+      ">Dismiss</button>
+    </div>
+  `;
 
-function hideWarningOverlay() {
-    const overlay = document.getElementById('abhedya-threat-overlay');
-    if (overlay) {
-        overlay.remove();
-        document.body.style.overflow = '';
+  // Push body content down
+  try {
+    document.body.style.marginTop = '64px';
+    document.body.style.transition = 
+      'margin-top 200ms ease';
+  } catch(e) {}
+
+  try {
+    document.body.insertBefore(
+      banner, 
+      document.body.firstChild
+    );
+  } catch(e) {
+    // If body not ready, append to documentElement
+    try {
+      document.documentElement.appendChild(banner);
+    } catch(e2) {
+      console.error('[abhedya] Cannot inject banner');
     }
+  }
+
+  // Wire up buttons after DOM insertion
+  setTimeout(() => {
+    const leaveBtn = document.getElementById(
+      'abhedya-leave-btn'
+    );
+    const dismissBtn = document.getElementById(
+      'abhedya-dismiss-btn'
+    );
+    
+    if (leaveBtn) {
+      leaveBtn.addEventListener('click', () => {
+        window.history.back();
+      });
+    }
+    
+    if (dismissBtn) {
+      dismissBtn.addEventListener('click', () => {
+        const b = document.getElementById(
+          'abhedya-sec-warning'
+        );
+        if (b) b.remove();
+        try {
+          document.body.style.marginTop = '0';
+        } catch(e) {}
+      });
+    }
+  }, 0);
 }

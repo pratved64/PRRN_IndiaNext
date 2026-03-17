@@ -12,7 +12,13 @@ at 60). The result is combined later with ML model scores by scorer.py.
 from datetime import datetime, timezone
 from typing import Dict, List, Optional, Tuple
 
-from feature_engineer import haversine_km, _parse_ts, _feature_is_new_device, _feature_is_new_country, _feature_days_since_last_login
+from .feature_engineer import (
+    haversine_km,
+    _parse_ts,
+    _feature_is_new_device,
+    _feature_is_new_country,
+    _feature_days_since_last_login,
+)
 
 
 # ---------------------------------------------------------------------------

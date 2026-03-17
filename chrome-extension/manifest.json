@@ -9,8 +9,7 @@
     "tabs",
     "storage",
     "notifications",
-    "webNavigation",
-    "declarativeNetRequest"
+    "webNavigation"
   ],
   
   "host_permissions": [
@@ -26,7 +25,7 @@
     {
       "matches": ["<all_urls>"],
       "js": ["content.js"],
-      "run_at": "document_start"
+      "run_at": "document_idle"
     }
   ],
   

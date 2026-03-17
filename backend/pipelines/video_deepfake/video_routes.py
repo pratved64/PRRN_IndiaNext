@@ -99,10 +99,12 @@ async def analyze_media_endpoint(
     if file is None:
         raise HTTPException(status_code=400, detail="No file uploaded. Please attach an image or video in 'file' field.")
 
-    try:
-        processor, model = await get_vit_model(request.app)
-    except Exception as e:
-        raise HTTPException(status_code=503, detail=f"Deepfake model failed to load: {str(e)}")
+    # Fix B5: Use app.state models
+    processor = request.app.state.vit_processor
+    model = request.app.state.vit_model
+
+    if model is None or processor is None:
+        raise HTTPException(status_code=503, detail="Deepfake detection model is not available.")
 
     content_type = file.content_type or ""
 

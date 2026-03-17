@@ -97,36 +97,40 @@ def explain_chunk(text: str) -> dict:
         "top_tokens":  top_tokens,
         "attributions": attributions
     }
-def scan_url(url: str) -> dict:
+def scan_url(url: str, model, tokenizer, device="cpu") -> dict:
     print(f"\nScraping: {url}")
     chunks = scrape_text(url)
     print(f"Extracted {len(chunks)} text chunks")
     results  = []
     flagged  = []
     for i, chunk in enumerate(chunks):
-        result = explain_chunk(chunk)
-        results.append(result)
-        if result["is_injection"]:
-            flagged.append(result)
-        if (i + 1) % 10 == 0:
-            print(f"  Scanned {i+1}/{len(chunks)} chunks")
-    flagged.sort(key=lambda x: x["injection_prob"], reverse=True)
-    threat_score = len(flagged) / len(chunks) if chunks else 0
-    print("\n" + "=" * 55)
-    print(f"URL           : {url}")
-    print(f"Total chunks  : {len(chunks)}")
-    print(f"Flagged       : {len(flagged)}")
-    print(f"Threat score  : {threat_score:.1%}")
-    print(f"Verdict       : {'DANGEROUS' if threat_score > 0.1 else 'SUSPICIOUS' if threat_score > 0.02 else 'CLEAN'}")
-    print("=" * 55)
-    if flagged:
-        print(f"\nTop {min(3, len(flagged))} flagged chunks with trigger tokens:\n")
-        for f in flagged[:3]:
-            print(f"  Text    : {f['text'][:120]}")
-            print(f"  Score   : {f['injection_prob']:.1%}")
-            print(f"  Tokens  : {[t['token'] for t in f['top_tokens'][:8]]}")
-            print()
+        # Pass model/tokenizer to inner functions if needed, or inline the logic
+        inputs = tokenizer(
+            chunk,
+            return_tensors="pt",
+            truncation=True,
+            max_length=512,
+            padding=True
+        )
+        inputs = {k: v.to(device) for k, v in inputs.items()}
 
+        with torch.no_grad():
+            logits = model(**inputs).logits
+            probs  = torch.softmax(logits, dim=-1).squeeze()
+
+        injection_prob = probs[1].item()
+        is_injection   = injection_prob >= 0.5
+        
+        result = {
+            "is_injection": is_injection,
+            "injection_prob": round(injection_prob, 3),
+            "text": chunk[:150]
+        }
+        results.append(result)
+        if is_injection:
+            flagged.append(result)
+            
+    threat_score = len(flagged) / len(chunks) if chunks else 0
     return {
         "url":          url,
         "total_chunks": len(chunks),
@@ -135,5 +139,3 @@ def scan_url(url: str) -> dict:
         "verdict":      "DANGEROUS" if threat_score > 0.1 else "SUSPICIOUS" if threat_score > 0.02 else "CLEAN",
         "results":      flagged[:10]
     }
-url    = input("Enter URL to scan: ").strip()
-result = scan_url(url)

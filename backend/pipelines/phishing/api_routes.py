@@ -1,11 +1,9 @@
+import anyio
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, HttpUrl, Field
 from typing import List
 
 # Import our AI pipeline logic
-# In a real app we might put the route in routes/phishing.py and logic here, 
-# but per instructions, we are restricting work to pipelines/phishing.py 
-# so we will add the router here for easy importing to main.py later.
 from pipelines.phishing.phishing import analyze_email
 
 router = APIRouter(prefix="/analyze", tags=["Phishing Analysis"])
@@ -27,19 +25,10 @@ class ThreatResponse(BaseModel):
 
 
 def translate_risk_score(score: float) -> str:
-    """
-    Step 4.3: Add the Translation Layer.
-    Map the raw probability score to a string response for the frontend.
-
-    Frontend maps these prefixes to riskLevel:
-      "High Risk: ..."    → "Critical"
-      "Medium Risk: ..."  → "Medium"
-      "Low Risk: ..."     → "Low"
-      (anything else)     → "None"
-    """
-    if score >= 0.75:
+    # Fix B3: Correct thresholds (0.7, 0.4) as per architecture
+    if score >= 0.7:
         return "High Risk: Phishing Attempt Detected"
-    elif score >= 0.40:
+    elif score >= 0.4:
         return "Medium Risk: Suspicious Elements Found"
     else:
         return "Low Risk: Looks Safe"
@@ -48,27 +37,21 @@ def translate_risk_score(score: float) -> str:
 @router.post("/text", response_model=ThreatResponse)
 async def analyze_text_endpoint(request_data: ThreatRequest, request: Request):
     """
-    Step 4.1 & 4.2: ThreatRequest / ThreatResponse schemas and POST endpoint.
-
-    Contract consumed by PhishingAnalyzer.tsx:
-      POST /api/analyze/text
-      Body:    { text: string }
-      Returns: { risk_score: float, classification: string, highlighted_words: {word, score}[] }
+    Step 4: API Endpoint
+    Accepts text, runs DistilBERT + LIG, returns results.
     """
-    try:
-        # Lazy load the model
-        from main import get_phishing_model
-        tokenizer, model = await get_phishing_model(request.app)
-    except Exception as e:
-        raise HTTPException(status_code=503, detail=f"Phishing Models failed to load: {str(e)}")
+    if not request_data.text.strip():
+        raise HTTPException(status_code=400, detail="Empty text payload.")
+
+    # Fix B3: Use app.state models
+    model = request.app.state.model
+    tokenizer = request.app.state.tokenizer
+
+    if model is None or tokenizer is None:
+        raise HTTPException(status_code=503, detail="Phishing detection model is not available.")
 
     try:
-        # Run the heavy PyTorch logic
-        # (In a production system using FastAPI, we would run this in a threadpool 
-        # so it doesn't block the async event loop. We will wrap it in anyio.to_thread 
-        # as per the RULES.md "Ensure heavy ml inference don't block main event loop")
-        import anyio
-        
+        # Offload heavy ML work to a separate thread
         result = await anyio.to_thread.run_sync(analyze_email, request_data.text, model, tokenizer)
         
         risk_score = result["risk_score"]
@@ -83,5 +66,4 @@ async def analyze_text_endpoint(request_data: ThreatRequest, request: Request):
             ]
         )
     except Exception as e:
-        # RULES.md: Fail Gracefully
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")

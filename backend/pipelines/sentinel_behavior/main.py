@@ -28,7 +28,7 @@ import sys
 from dotenv import load_dotenv
 from pathlib import Path
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 def _load_env():
     here = Path(__file__).parent
@@ -51,15 +51,17 @@ from typing import Dict, List, Optional, Any
 from fastapi import APIRouter
 from fastapi import HTTPException, Request, Response, Body
 
-from data_generator import get_all_sessions, get_user_normal_sessions, DEMO_ATTACK_EVENTS
-from feature_engineer import extract_features, get_feature_names
-from rule_engine import run_rules
-from models.isolation_forest import UserIsolationForest
-from models.autoencoder import AutoencoderManager
-from explainability.shap_explainer import format_shap_for_display
-from explainability.narrative import generate_narrative
-from scorer import fuse_scores, get_recommended_action
-from schemas import (
+# NOTE: Use relative imports to ensure we import this package's modules,
+# not an unrelated third-party package that might exist in site-packages.
+from .data_generator import get_all_sessions, get_user_normal_sessions, DEMO_ATTACK_EVENTS
+from .feature_engineer import extract_features, get_feature_names
+from .rule_engine import run_rules
+from .models.isolation_forest import UserIsolationForest
+from .models.autoencoder import AutoencoderManager
+from .explainability.shap_explainer import format_shap_for_display
+from .explainability.narrative import generate_narrative
+from .scorer import fuse_scores, get_recommended_action
+from .schemas import (
     LoginEvent,
     ExplanationPayload,
     DemoScenario,
@@ -67,7 +69,7 @@ from schemas import (
     ShapFeature,
     HistorySummaryItem,
 )
-from demo_scenarios import DEMO_SCENARIOS, DEMO_SCENARIOS_BY_ID
+from .demo_scenarios import DEMO_SCENARIOS, DEMO_SCENARIOS_BY_ID
 
 # ---------------------------------------------------------------------------
 # Logging setup
@@ -200,7 +202,7 @@ async def _run_analysis_pipeline(
 
     # Step 1 — User history (strictly prior events only)
     all_sessions: Dict[str, List[dict]] = app_state.all_sessions
-    from feature_engineer import _parse_ts
+    from .feature_engineer import _parse_ts
     event_ts = _parse_ts(event_dict["timestamp"])
     user_history: List[dict] = [
         e for e in all_sessions.get(user_id, [])
@@ -264,7 +266,7 @@ async def _run_analysis_pipeline(
         )
     except asyncio.TimeoutError:
         logger.warning("LLM narrative timed out (>8s). Using fallback.")
-        from explainability.narrative import _fallback_narrative
+        from .explainability.narrative import _fallback_narrative
         narrative = _fallback_narrative(rule_result["rules_fired"], severity_score)
 
     # Step 11 — Recommended action
@@ -324,7 +326,7 @@ async def analyze_login(
     request: Request,
     event: LoginEvent = Body(
         ...,
-        example={
+        examples=[{
             "event_id": "evt-live-001",
             "user_id": "user_001",
             "timestamp": "2025-03-16T22:28:00",
@@ -339,7 +341,7 @@ async def analyze_login(
             "failure_count": 0,
             "session_duration_mins": 12,
             "is_vpn": False
-        }
+        }]
     )
 ):
     """Analyze a login event for anomalous behavior."""

@@ -54,10 +54,12 @@ async def analyze_url_endpoint(request_data: UrlRequest, request: Request):
     Resolves the URL (including shorteners) and runs shared DistilBERT inference.
     Returns risk_score, classification, original_url, resolved_url, and highlighted_words.
     """
-    try:
-        tokenizer, model = await get_phishing_model(request.app)
-    except Exception as e:
-        raise HTTPException(status_code=503, detail=f"Phishing models failed to load: {str(e)}")
+    # Fix B4: Use app.state models
+    tokenizer = request.app.state.tokenizer
+    model = request.app.state.model
+
+    if model is None or tokenizer is None:
+        raise HTTPException(status_code=503, detail="Phishing detection model is not available.")
 
     original_url = request_data.url
 
@@ -65,25 +67,30 @@ async def analyze_url_endpoint(request_data: UrlRequest, request: Request):
     try:
         resolved_url = await resolve_url(original_url)
     except ValueError as e:
-        # True validation / SSRF block → surface as 400
         raise HTTPException(status_code=400, detail=str(e))
     except (httpx.TimeoutException, httpx.RequestError):
-        # Network/timeout issues: fall back to analyzing the original URL string
         resolved_url = original_url
 
-    # Step 2: Run inference on the resolved URL (offloaded to thread pool per RULES.md)
+    # Step 2: Run inference on the resolved URL (offloaded to thread pool)
     try:
         clean_text = _preprocess_url_for_model(resolved_url)
-        # Prepend a context prompt to help the DistilBERT model (trained on email text)
-        # understand that this specific token sequence is a URL to be analyzed.
         context_text = f"The following URL needs to be checked for phishing: {clean_text}"
         
         fn = partial(analyze_email, context_text, model, tokenizer)
         result = await anyio.to_thread.run_sync(fn)
         risk_score = result["risk_score"]
+        
+        # Correct thresholds (0.7, 0.4)
+        if risk_score >= 0.7:
+            classification = "High Risk: Phishing / Malicious Intent Detected"
+        elif risk_score >= 0.4:
+            classification = "Medium Risk: Suspicious Elements Found"
+        else:
+            classification = "Low Risk: Looks Safe"
+
         return UrlResponse(
             risk_score=risk_score,
-            classification=translate_risk_score(risk_score),
+            classification=classification,
             original_url=original_url,
             resolved_url=resolved_url,
             highlighted_words=[
@@ -92,5 +99,4 @@ async def analyze_url_endpoint(request_data: UrlRequest, request: Request):
             ],
         )
     except Exception as e:
-        # RULES.md: Fail gracefully
         raise HTTPException(status_code=500, detail=f"URL analysis failed: {str(e)}")

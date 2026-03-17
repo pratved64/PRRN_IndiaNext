@@ -12,7 +12,7 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from data_generator import DEMO_ATTACK_EVENTS
+from .data_generator import DEMO_ATTACK_EVENTS
 from schemas import DemoScenario, LoginEvent
 
 

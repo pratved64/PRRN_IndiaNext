@@ -11,7 +11,7 @@ model.eval()
 for param in model.parameters():
     param.requires_grad = False
 
-class LinearClassifier(torch.nn.Module):
+class AudioClassifier(torch.nn.Module):
     def __init__(self, input_dim):
         super().__init__()
         self.dropout = torch.nn.Dropout(0.1)
