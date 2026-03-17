@@ -44,34 +44,34 @@ export interface BackendResponse {
  * Unified fetch wrapper to handle ngrok headers and JSON serialization
  */
 async function apiFetch(
-  path: string, 
+  path: string,
   options: RequestInit = {}
 ): Promise<any> {
   // Ensure path starts with /
   const cleanPath = path.startsWith('/') ? path : `/${path}`;
   const url = `${API_BASE}${cleanPath.replace(/^\/api/, "")}`;
-  
+
   // Merge ngrok header with any existing headers
   const headers = {
     ...(options.headers || {}),
     'ngrok-skip-browser-warning': 'true',
   };
-  
+
   // Only set Content-Type for non-FormData requests
   if (!(options.body instanceof FormData)) {
     (headers as any)['Content-Type'] = 'application/json';
   }
-  
-  const res = await fetch(url, { 
-    ...options, 
-    headers 
+
+  const res = await fetch(url, {
+    ...options,
+    headers
   });
-  
+
   if (!res.ok) {
     const text = await res.text();
     throw new Error(`API ${path} failed: ${res.status} — ${text}`);
   }
-  
+
   return res.json();
 }
 

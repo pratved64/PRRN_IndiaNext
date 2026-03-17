@@ -31,13 +31,14 @@ export default function Dashboard() {
   const { theme, toggleTheme, themeStyle } = useTheme();
 
   return (
-    <div 
+    <div
       className="min-h-screen bg-neutral-950 text-neutral-200 font-sans selection:bg-neutral-700 selection:text-white relative overflow-hidden flex flex-col items-center"
       style={themeStyle}
     >
-      
+
       {/* Background Grid */}
-      <style dangerouslySetInnerHTML={{__html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         .bg-grid {
           background-size: 40px 40px;
           background-image: 
@@ -53,7 +54,7 @@ export default function Dashboard() {
 
         {/* Theme Toggle */}
         <div className="flex justify-end mb-4">
-          <button 
+          <button
             onClick={toggleTheme}
             className="flex items-center gap-2 px-4 py-2 rounded-md border border-white/10 bg-white/5 text-neutral-400 hover:text-white hover:bg-white/10 transition-all cursor-pointer font-mono text-xs uppercase tracking-widest focus:outline-none"
           >
@@ -64,7 +65,7 @@ export default function Dashboard() {
             )}
           </button>
         </div>
-        
+
         {/* Stats Grid */}
         <div className="grid grid-cols-2 gap-4 mb-8 lg:grid-cols-4">
           {STATS.map((stat) => (
@@ -80,43 +81,43 @@ export default function Dashboard() {
 
         {/* Split Layout for Threats and News */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          
+
           {/* Recent Threats Table (2/3 width) */}
           <div className="lg:col-span-2 bg-neutral-900/40 rounded-lg border border-white/10 overflow-hidden backdrop-blur-sm">
-          <div className="px-6 py-4 border-b border-white/10 bg-black/40 flex justify-between items-center">
-            <h2 className="text-sm font-mono uppercase text-white tracking-widest">Recent Interceptions</h2>
-            <span className="text-[10px] font-mono text-neutral-500 uppercase flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-              Live Sync
-            </span>
-          </div>
-          
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
-              <thead className="bg-black/20 text-neutral-500 font-mono uppercase text-[10px] tracking-widest border-b border-white/5">
-                <tr>
-                  <th className="px-6 py-4 font-normal">Threat Type</th>
-                  <th className="px-6 py-4 font-normal">Target / Indicator</th>
-                  <th className="px-6 py-4 font-normal">Severity</th>
-                  <th className="px-6 py-4 font-normal text-right">Timestamp</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {RECENT_THREATS.map((threat) => (
-                  <tr key={threat.id} className="hover:bg-white/[0.02] transition">
-                    <td className="px-6 py-4 text-neutral-300 font-medium">{threat.type}</td>
-                    <td className="px-6 py-4 text-neutral-500 font-mono text-xs">{threat.target}</td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2 py-1 rounded border text-[10px] font-mono uppercase tracking-widest ${riskBadge[threat.risk]}`}>
-                        {threat.risk}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-neutral-600 font-mono text-xs text-right">{threat.time}</td>
+            <div className="px-6 py-4 border-b border-white/10 bg-black/40 flex justify-between items-center">
+              <h2 className="text-sm font-mono uppercase text-white tracking-widest">Recent Interceptions</h2>
+              <span className="text-[10px] font-mono text-neutral-500 uppercase flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                Live Sync
+              </span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead className="bg-black/20 text-neutral-500 font-mono uppercase text-[10px] tracking-widest border-b border-white/5">
+                  <tr>
+                    <th className="px-6 py-4 font-normal">Threat Type</th>
+                    <th className="px-6 py-4 font-normal">Target / Indicator</th>
+                    <th className="px-6 py-4 font-normal">Severity</th>
+                    <th className="px-6 py-4 font-normal text-right">Timestamp</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {RECENT_THREATS.map((threat) => (
+                    <tr key={threat.id} className="hover:bg-white/[0.02] transition">
+                      <td className="px-6 py-4 text-neutral-300 font-medium">{threat.type}</td>
+                      <td className="px-6 py-4 text-neutral-500 font-mono text-xs">{threat.target}</td>
+                      <td className="px-6 py-4">
+                        <span className={`px-2 py-1 rounded border text-[10px] font-mono uppercase tracking-widest ${riskBadge[threat.risk]}`}>
+                          {threat.risk}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-neutral-600 font-mono text-xs text-right">{threat.time}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
 
           {/* News Widget (1/3 width) */}

@@ -147,13 +147,14 @@ export default function CyberHelp() {
   }, []);
 
   return (
-    <div 
+    <div
       className="min-h-screen bg-[#0a0a0a] text-neutral-200 font-sans selection:bg-red-900 selection:text-white relative overflow-hidden flex flex-col items-center pb-20"
       style={themeStyle}
     >
-      
+
       {/* Radar Map & Grid CSS */}
-      <style dangerouslySetInnerHTML={{__html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         .bg-grid-cyber {
           background-size: 50px 50px;
           background-image: 
@@ -231,10 +232,10 @@ export default function CyberHelp() {
 
       {/* Main Content Container */}
       <div className="max-w-6xl w-full px-4 md:px-8 mt-12 relative z-10 mx-auto">
-        
+
         {/* Theme Toggle Button */}
         <div className="flex justify-end mb-6">
-          <button 
+          <button
             onClick={toggleTheme}
             className="flex items-center gap-2 px-4 py-2 rounded-md border border-red-500/30 bg-red-950/20 text-red-400 hover:text-white hover:bg-red-900/40 transition-all cursor-pointer font-mono text-xs uppercase tracking-widest focus:outline-none shadow-[0_0_10px_rgba(239,68,68,0.1)]"
           >
@@ -257,22 +258,22 @@ export default function CyberHelp() {
         </header>
 
         <div className="flex flex-col lg:flex-row gap-8">
-          
+
           {/* Radar Map Sidebar */}
           <div className="w-full lg:w-1/3 flex flex-col items-center">
-            
+
             <div className="bg-neutral-900 border border-red-500/20 rounded-xl p-8 w-full flex flex-col items-center justify-center relative overflow-hidden shadow-[0_0_30px_rgba(239,68,68,0.1)]">
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-red-500 to-transparent"></div>
-              
+
               {/* Fake Map Radar UI */}
               <div className="radar my-8">
                 <div className="radar-crosshair crosshair-v"></div>
                 <div className="radar-crosshair crosshair-h"></div>
                 <div className="radar-sweep"></div>
-                
+
                 {/* Center User Point */}
                 <div className="absolute top-1/2 left-1/2 w-3 h-3 bg-white rounded-full transform -translate-x-1/2 -translate-y-1/2 shadow-[0_0_15px_#fff] z-10"></div>
-                
+
                 {/* Animated Simulated Blips */}
                 {showResults && (
                   <>
@@ -325,17 +326,17 @@ export default function CyberHelp() {
                   <h2 className="text-lg font-mono text-white tracking-widest uppercase">{t('help.verified')}</h2>
                   <span className="text-xs font-mono text-neutral-500">{t('help.sorted')}</span>
                 </div>
-                
-                {CYBER_SERVICES.sort((a,b) => a.distance_km - b.distance_km).map(service => (
+
+                {CYBER_SERVICES.sort((a, b) => a.distance_km - b.distance_km).map(service => (
                   <div key={service.id} className="bg-neutral-900 border border-white/5 hover:border-red-500/40 hover:bg-neutral-800 transition-all rounded-xl p-6 group relative overflow-hidden">
-                    
+
                     {/* Emergency Flag */}
                     {service.emergency_support && (
                       <div className="absolute top-0 right-0 bg-red-600 text-white text-[10px] uppercase font-bold tracking-widest px-3 py-1 rounded-bl-lg shadow-[0_0_10px_rgba(220,38,38,0.5)]">
                         {t('help.emergency') || "24/7 Emergency"}
                       </div>
                     )}
-                    
+
                     <div className="flex flex-col md:flex-row justify-between md:items-start gap-4 mb-4">
                       <div>
                         <h3 className="text-xl text-white font-medium mb-1 flex items-center gap-2">
@@ -343,7 +344,7 @@ export default function CyberHelp() {
                         </h3>
                         <p className="text-sm font-mono text-cyan-400 uppercase tracking-widest">{service.type}</p>
                       </div>
-                      
+
                       <div className="flex items-center gap-3">
                         <div className="bg-black/50 border border-white/10 px-3 py-1.5 rounded text-sm text-neutral-300 font-mono">
                           ★ {service.rating}
@@ -364,7 +365,7 @@ export default function CyberHelp() {
                         <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
                         {service.phone}
                       </a>
-                      
+
                       <a href={`mailto:${service.email}`} className="flex items-center gap-2 text-sm font-mono text-neutral-300 hover:text-white bg-white/5 hover:bg-white/10 px-3 py-2 rounded transition truncate">
                         <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
                         {service.email.split('@')[0]}@...

@@ -61,7 +61,8 @@ export default function UrlScanner() {
       className="min-h-screen bg-[#0a0a0a] text-neutral-200 font-sans selection:bg-neutral-700 selection:text-white relative overflow-hidden flex flex-col items-center"
       style={themeStyle}
     >
-      <style dangerouslySetInnerHTML={{__html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         @keyframes drift {
           from { background-position: 0 0; }
           to { background-position: -40px -40px; }

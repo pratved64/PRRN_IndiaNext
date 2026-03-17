@@ -28,7 +28,7 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <div 
+    <div
       className="min-h-screen bg-neutral-950 text-neutral-200 font-sans selection:bg-cyan-900 selection:text-white relative overflow-hidden flex flex-col items-center pb-20"
       style={themeStyle}
     >
@@ -172,7 +172,7 @@ export default function LandingPage() {
               <div className="absolute w-full h-full rounded-full border-t-2 border-r-2 border-cyan-400/80 shadow-[0_0_15px_rgba(6,182,212,0.5)] group-hover:border-cyan-300 transition-all duration-300" style={{ animation: 'gyro1 5s linear infinite' }}></div>
               <div className="absolute w-full h-full rounded-full border-b-2 border-l-2 border-blue-600/80 shadow-[0_0_15px_rgba(37,99,235,0.5)] group-hover:border-blue-400 transition-all duration-300" style={{ animation: 'gyro2 7s linear infinite' }}></div>
               <div className="absolute w-4 h-4 rounded-full bg-gradient-to-tr from-cyan-400 to-white shadow-[0_0_20px_rgba(255,255,255,0.9)] core-pulse group-hover:scale-125 transition-transform duration-300 flex items-center justify-center">
-                 <div className="w-1.5 h-1.5 bg-white rounded-full blur-[1px]"></div>
+                <div className="w-1.5 h-1.5 bg-white rounded-full blur-[1px]"></div>
               </div>
             </div>
             <span className="text-2xl font-light tracking-widest text-white uppercase group-hover:text-cyan-50 transition-colors drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]">
@@ -249,14 +249,14 @@ export default function LandingPage() {
         <section id="awareness" className="mb-24 w-full relative">
           <div className="bg-[#050505] border border-white/10 rounded-2xl p-6 md:p-10 shadow-[0_0_50px_rgba(0,0,0,0.8)]">
             <div className="flex flex-col md:flex-row gap-10 items-center">
-              
+
               <div className="flex-1 space-y-6">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-red-500/10 border border-red-500/20 text-[10px] font-mono font-bold text-red-400 uppercase tracking-widest">
                   <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
                   Tactical Intel brief
                 </div>
                 <h2 className="text-3xl md:text-4xl font-light text-white leading-tight">
-                  You Are The <br/><span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-orange-500">Human Firewall.</span>
+                  You Are The <br /><span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-orange-500">Human Firewall.</span>
                 </h2>
                 <p className="text-neutral-400 text-sm leading-relaxed font-mono">
                   Over 90% of all cyber breaches start with human error. No amount of encryption can protect a system if a user unknowingly grants access through a malicious link.
@@ -276,9 +276,9 @@ export default function LandingPage() {
 
                 <div className="relative aspect-video rounded-lg overflow-hidden border border-white/10 bg-neutral-900 shadow-[0_0_30px_rgba(6,182,212,0.15)]">
                   {/* Genuine Tactical Cybersecurity Image */}
-                  <img 
-                    src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=1000" 
-                    alt="Cyber Defense Intelligence" 
+                  <img
+                    src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=1000"
+                    alt="Cyber Defense Intelligence"
                     className="w-full h-full object-cover opacity-80 transition-opacity duration-500 group-hover:opacity-100"
                   />
                   {/* Subtle Scanline Overlay */}
@@ -312,11 +312,11 @@ export default function LandingPage() {
 
         {/* 3.5 CYBERCRIME HEATMAP MAP WIDGET */}
         <section id="cybercrime-map" className="mb-24 w-full relative border border-white/10 rounded-xl overflow-hidden shadow-[0_0_30px_rgba(6,182,212,0.1)]">
-          <iframe 
-            src="/cybercrime-map.html" 
+          <iframe
+            src="/cybercrime-map.html"
             title="India Cybercrime Heatmap"
-            width="100%" 
-            height="900px" 
+            width="100%"
+            height="900px"
             style={{ height: '90vh', minHeight: '600px', border: 'none', display: 'block' }}
           />
         </section>

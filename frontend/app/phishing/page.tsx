@@ -13,7 +13,7 @@ export default function PhishingAnalyzer() {
   const [result, setResult] = useState<ThreatResult | null>(null);
   const { theme, toggleTheme, themeStyle } = useTheme();
   const { t } = useLanguage();
-  
+
   const handleAnalyze = async (scenario: "threat" | "safe" = "threat") => {
     if (!inputText.trim()) return;
 
@@ -59,13 +59,14 @@ export default function PhishingAnalyzer() {
   const lineCount = inputText.split(/\r\n|\r|\n/).length;
 
   return (
-    <div 
+    <div
       className="min-h-screen bg-[#0a0a0a] text-neutral-200 font-sans selection:bg-neutral-700 selection:text-white relative overflow-hidden flex flex-col items-center"
       style={themeStyle}
     >
-      
+
       {/* Dynamic CSS for Background & Lasers */}
-      <style dangerouslySetInnerHTML={{__html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         @keyframes drift {
           from { background-position: 0 0; }
           to { background-position: -40px -40px; }
@@ -100,7 +101,7 @@ export default function PhishingAnalyzer() {
 
         {/* Theme Toggle */}
         <div className="flex justify-end mb-4">
-          <button 
+          <button
             onClick={toggleTheme}
             className="flex items-center gap-2 px-4 py-2 rounded-md border border-white/10 bg-white/5 text-neutral-400 hover:text-white hover:bg-white/10 transition-all cursor-pointer font-mono text-xs uppercase tracking-widest focus:outline-none"
           >
@@ -111,7 +112,7 @@ export default function PhishingAnalyzer() {
             )}
           </button>
         </div>
-        
+
         {/* Header Title */}
         <header className="mb-10">
           <h1 className="text-4xl md:text-5xl font-light tracking-tight text-white mb-2">
@@ -124,7 +125,7 @@ export default function PhishingAnalyzer() {
 
         {/* Primary Input Console */}
         <div className="bg-neutral-900/40 border border-white/10 rounded-xl backdrop-blur-md shadow-2xl overflow-hidden">
-          
+
           {/* Console Top Bar */}
           <div className="bg-neutral-950 px-4 py-3 border-b border-white/10 flex justify-between items-center">
             <div className="flex gap-2">
@@ -139,7 +140,7 @@ export default function PhishingAnalyzer() {
 
           <div className="p-1">
             <div className="relative bg-black rounded-lg overflow-hidden border border-transparent focus-within:border-white/20 transition-all duration-300 group">
-              
+
               {/* Overlay while analyzing */}
               {isAnalyzing && (
                 <div className="absolute inset-0 bg-black/60 z-20 flex flex-col items-center justify-center backdrop-blur-[2px]">
@@ -162,7 +163,7 @@ export default function PhishingAnalyzer() {
                 onChange={(e) => setInputText(e.target.value)}
                 disabled={isAnalyzing}
               />
-              
+
               {/* Laser Scanner Line */}
               {isAnalyzing && (
                 <div className="absolute left-0 w-full h-[2px] cyber-scanner z-30 pointer-events-none"></div>

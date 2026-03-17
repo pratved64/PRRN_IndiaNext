@@ -13,7 +13,7 @@ export default function DeepfakeScanner() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState<ThreatResult | null>(null);
   const [sessionId, setSessionId] = useState("");
-  
+
   useEffect(() => {
     setSessionId(`MED-${Math.random().toString(36).substring(2, 8).toUpperCase()}`);
   }, []);
@@ -32,7 +32,7 @@ export default function DeepfakeScanner() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioProgress, setAudioProgress] = useState(0);
   const [audioDuration, setAudioDuration] = useState(0);
-  const [audioBarStyles, setAudioBarStyles] = useState<{delay: string, height: string}[]>([]);
+  const [audioBarStyles, setAudioBarStyles] = useState<{ delay: string, height: string }[]>([]);
 
   // Initialize audio bar styles on client
   useEffect(() => {
@@ -55,7 +55,7 @@ export default function DeepfakeScanner() {
         height: `${Math.max(20, Math.random() * 100)}%`
       })));
     }, 150);
-    
+
     return () => clearInterval(interval);
   }, [isPlaying]);
 
@@ -86,20 +86,20 @@ export default function DeepfakeScanner() {
 
     const isThreat = isAnalyzing || (result && result.riskLevel === "Critical");
     const markers = result?.timelineMarkers;
-    
+
     // In a real scenario, this would use audioDuration, but for mock we use 20s
     const duration = audioDuration > 0 ? audioDuration : 20;
-    
+
     const numPoints = 100; // Increased resolution for smoother hover
     const newData = [];
-    
+
     for (let i = 0; i <= numPoints; i++) {
       const percent = i / numPoints;
       // Base value without random to avoid hydration issues if ever rendered server-side
       // though this is in useEffect so it's safe.
-      let val = isThreat ? 85 : 97.5; 
-      const timeSec = percent * duration; 
-      
+      let val = isThreat ? 85 : 97.5;
+      const timeSec = percent * duration;
+
       // Add spikes where markers are
       if (markers && isThreat) {
         for (const m of markers) {
@@ -112,7 +112,7 @@ export default function DeepfakeScanner() {
     }
     setGraphData(newData);
   }, [isAnalyzing, result, audioDuration]);
-  
+
   const getGraphPointsString = () => {
     if (graphData.length === 0) return "0,100 100,100";
     let points = "0,100 ";
@@ -125,16 +125,16 @@ export default function DeepfakeScanner() {
 
   const handleGraphMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
     if (!graphContainerRef.current || graphData.length === 0) return;
-    
+
     const rect = graphContainerRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const percentX = x / rect.width;
-    
+
     // Find closest data point
     const closest = graphData.reduce((prev, curr) => {
       return (Math.abs(curr.percent - percentX) < Math.abs(prev.percent - percentX) ? curr : prev);
     });
-    
+
     setHoverData(closest);
   };
 
@@ -212,13 +212,14 @@ export default function DeepfakeScanner() {
   };
 
   return (
-    <div 
+    <div
       className="min-h-screen bg-[#0a0a0a] text-neutral-200 font-sans selection:bg-neutral-700 selection:text-white relative overflow-hidden flex flex-col items-center pb-20"
       style={themeStyle}
     >
-      
+
       {/* Dynamic CSS for Grid & Scanning Animation */}
-      <style dangerouslySetInnerHTML={{__html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         @keyframes drift {
           from { background-position: 0 0; }
           to { background-position: -40px -40px; }
@@ -264,7 +265,7 @@ export default function DeepfakeScanner() {
 
         {/* Theme Toggle */}
         <div className="flex justify-end mb-4">
-          <button 
+          <button
             onClick={toggleTheme}
             className="flex items-center gap-2 px-4 py-2 rounded-md border border-white/10 bg-white/5 text-neutral-400 hover:text-white hover:bg-white/10 transition-all cursor-pointer font-mono text-xs uppercase tracking-widest focus:outline-none"
           >
@@ -275,7 +276,7 @@ export default function DeepfakeScanner() {
             )}
           </button>
         </div>
-        
+
         {/* Top Telemetry Bar */}
         <div className="flex justify-between items-center mb-8 pb-4 border-b border-white/10 text-xs font-mono uppercase tracking-widest text-neutral-500">
           <div className="flex items-center gap-4">
@@ -299,7 +300,7 @@ export default function DeepfakeScanner() {
 
         {/* Primary Input Console */}
         <div className="bg-neutral-900/40 border border-white/10 rounded-xl backdrop-blur-md shadow-2xl overflow-hidden">
-          
+
           {/* Console Top Bar */}
           <div className="bg-neutral-950 px-4 py-3 border-b border-white/10 flex justify-between items-center">
             <div className="flex gap-2">
@@ -313,19 +314,19 @@ export default function DeepfakeScanner() {
           </div>
 
           <div className="p-4 md:p-6 bg-black/50">
-            
+
             {/* Upload Zone (Hidden if file is selected) */}
             {!file && (
-              <div 
+              <div
                 className="border border-dashed border-white/20 bg-white/5 hover:bg-white/10 hover:border-white/50 transition-all duration-300 rounded-lg p-12 text-center cursor-pointer group"
                 onClick={() => fileInputRef.current?.click()}
               >
-                <input 
-                  type="file" 
-                  ref={fileInputRef} 
-                  onChange={handleFileChange} 
-                  accept="image/*,audio/*,video/*" 
-                  className="hidden" 
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  accept="image/*,audio/*,video/*"
+                  className="hidden"
                 />
                 <div className="text-5xl mb-4 grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-100 transition-all">📸</div>
                 <p className="text-white font-mono uppercase tracking-widest text-sm mb-2">{t('df.initUpload') || "[ INITIALIZE UPLOAD ]"}</p>
@@ -336,7 +337,7 @@ export default function DeepfakeScanner() {
             {/* Media Preview Section */}
             {previewUrl && file && (
               <div className="relative rounded-lg overflow-hidden border border-white/10 bg-black flex justify-center items-center min-h-[300px]">
-                
+
                 {/* Visual Scanner Overlay */}
                 {isAnalyzing && (
                   <>
@@ -353,27 +354,27 @@ export default function DeepfakeScanner() {
                 {file.type.startsWith('image/') && (
                   <img src={previewUrl} alt="Preview" className={`max-h-[400px] object-contain ${isAnalyzing ? 'opacity-50' : ''}`} />
                 )}
-                
+
                 {file.type.startsWith('audio/') && (
                   <div className="w-full h-full min-h-[300px] p-8 bg-neutral-950 flex flex-col justify-center items-center relative">
-                    
+
                     {/* Hidden Audio Element */}
-                    <audio 
-                      ref={mediaRef as React.RefObject<HTMLAudioElement>} 
+                    <audio
+                      ref={mediaRef as React.RefObject<HTMLAudioElement>}
                       src={previewUrl}
                       onTimeUpdate={handleTimeUpdate}
                       onLoadedMetadata={(e) => setAudioDuration(e.currentTarget.duration)}
                       onEnded={() => setIsPlaying(false)}
-                      className="hidden" 
+                      className="hidden"
                     />
 
                     {/* Cyber Audio Waveform Visualizer */}
                     <div className="flex items-center justify-center gap-[3px] h-32 w-full mb-8 max-w-2xl px-4">
                       {audioBarStyles.map((style, i) => (
-                        <div 
-                          key={i} 
+                        <div
+                          key={i}
                           className={`w-2 md:w-3 bg-cyan-400 rounded-sm audio-bar ${isPlaying ? 'playing' : ''}`}
-                          style={{ 
+                          style={{
                             animationDelay: style.delay,
                             height: style.height,
                             opacity: isAnalyzing ? 0.3 : 1,
@@ -385,57 +386,57 @@ export default function DeepfakeScanner() {
 
                     {/* Custom Controls */}
                     <div className="w-full max-w-md bg-neutral-900 border border-white/10 rounded-xl p-4 flex flex-col gap-4 shadow-xl relative z-50 pointer-events-auto">
-                      
+
                       <div className="flex items-center justify-between w-full relative z-50">
                         {/* Play / Pause Toggle */}
-                        <button 
+                        <button
                           onClick={toggleAudioPlay}
                           className="w-12 h-12 flex items-center justify-center bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 rounded-full border border-cyan-500/30 transition-all z-50 pointer-events-auto"
                         >
                           {isPlaying ? (
-                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M6 4h4v16H6zm8 0h4v16h-4z"/></svg>
+                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M6 4h4v16H6zm8 0h4v16h-4z" /></svg>
                           ) : (
-                            <svg className="w-5 h-5 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                            <svg className="w-5 h-5 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
                           )}
                         </button>
-                        
+
                         {/* Progress Bar */}
                         <div className="flex-1 mx-4 relative h-1.5 bg-neutral-800 rounded-full overflow-hidden z-50 pointer-events-auto group">
-                          <div 
+                          <div
                             className="absolute top-0 left-0 h-full bg-cyan-400"
                             style={{ width: `${audioDuration ? (audioProgress / audioDuration) * 100 : 0}%` }}
                           ></div>
-                          <input 
-                            type="range" 
-                            min="0" 
-                            max={audioDuration || 100} 
+                          <input
+                            type="range"
+                            min="0"
+                            max={audioDuration || 100}
                             value={audioProgress}
                             onChange={(e) => seekTo(Number(e.target.value))}
                             className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer z-50 pointer-events-auto"
                           />
                         </div>
-                        
+
                         {/* Time display */}
                         <div className="text-xs font-mono text-cyan-400 w-24 text-right">
-                          0:{(audioProgress < 10 ? "0" : "")}{(audioProgress || 0).toFixed(1).replace(".", ":")} / 
+                          0:{(audioProgress < 10 ? "0" : "")}{(audioProgress || 0).toFixed(1).replace(".", ":")} /
                           0:{(audioDuration < 10 ? "0" : "")}{(audioDuration || 0).toFixed(1).replace(".", ":")}
                         </div>
                       </div>
                     </div>
                   </div>
                 )}
-                
+
                 {file.type.startsWith('video/') && (
-                  <video 
-                    ref={mediaRef as React.RefObject<HTMLVideoElement>} 
-                    controls 
-                    src={previewUrl} 
-                    className={`max-h-[400px] w-full object-contain ${isAnalyzing ? 'opacity-50' : ''}`} 
+                  <video
+                    ref={mediaRef as React.RefObject<HTMLVideoElement>}
+                    controls
+                    src={previewUrl}
+                    className={`max-h-[400px] w-full object-contain ${isAnalyzing ? 'opacity-50' : ''}`}
                   />
                 )}
               </div>
             )}
-            
+
             {/* Interactive Timeline Scrubbing (Only for Audio/Video after analysis) */}
             {result && result.timelineMarkers && !isAnalyzing && (
               <div className="mt-4 bg-neutral-900 border border-white/10 rounded-lg p-4 animate-in fade-in zoom-in duration-500">
@@ -448,7 +449,7 @@ export default function DeepfakeScanner() {
                 </div>
                 <div className="flex gap-2 relative overflow-x-auto pb-2 scrollbar-hide">
                   {result.timelineMarkers.map((marker, idx) => (
-                    <button 
+                    <button
                       key={idx}
                       onClick={() => seekTo(marker.time)}
                       className="flex-shrink-0 flex flex-col items-center justify-center bg-red-500/10 hover:bg-red-500/30 border border-red-500/30 hover:border-red-500/60 transition-all rounded px-3 py-2 cursor-pointer group"
@@ -474,7 +475,7 @@ export default function DeepfakeScanner() {
                     {isAnalyzing ? (t('df.processing') || "Processing...") : (t('df.complete') || "Analysis Complete")}
                   </span>
                 </div>
-                
+
                 <div className="h-24 w-full relative border-b border-l border-white/20" ref={graphContainerRef}>
                   {/* Graph Grid */}
                   <div className="absolute inset-0 flex flex-col justify-between opacity-20 pointer-events-none">
@@ -487,16 +488,16 @@ export default function DeepfakeScanner() {
                   {hoverData && !isAnalyzing && (
                     <>
                       {/* Vertical Reference Line */}
-                      <div 
+                      <div
                         className="absolute top-0 bottom-0 w-px bg-cyan-400 z-10 pointer-events-none"
                         style={{ left: `${hoverData.x}%` }}
                       ></div>
-                      
+
                       {/* Interactive Tooltip showing data at that second */}
-                      <div 
+                      <div
                         className="absolute z-20 bg-black/90 border border-cyan-500/50 p-2 rounded shadow-xl pointer-events-none min-w-[120px]"
-                        style={{ 
-                          left: hoverData.x > 80 ? 'auto' : `${hoverData.x}%`, 
+                        style={{
+                          left: hoverData.x > 80 ? 'auto' : `${hoverData.x}%`,
                           right: hoverData.x > 80 ? `${100 - hoverData.x}%` : 'auto',
                           top: '10%',
                           transform: hoverData.x > 80 ? 'translateX(-10px)' : 'translateX(10px)'
@@ -514,9 +515,9 @@ export default function DeepfakeScanner() {
                           </span>
                         </div>
                       </div>
-                      
+
                       {/* Point indicator on the line */}
-                      <div 
+                      <div
                         className="absolute w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_10px_rgba(6,182,212,1)] z-10 pointer-events-none transform -translate-x-1/2 -translate-y-1/2"
                         style={{ left: `${hoverData.x}%`, top: `${hoverData.y}%` }}
                       ></div>
@@ -524,14 +525,14 @@ export default function DeepfakeScanner() {
                   )}
 
                   {/* SVG Line / Area Graph */}
-                  <svg 
+                  <svg
                     className={`w-full h-full ${!isAnalyzing ? 'cursor-crosshair' : ''}`}
-                    preserveAspectRatio="none" 
+                    preserveAspectRatio="none"
                     viewBox="0 0 100 100"
                     onMouseMove={handleGraphMouseMove}
                     onMouseLeave={handleGraphMouseLeave}
                     onClick={() => {
-                       if (hoverData && !isAnalyzing) seekTo(hoverData.time);
+                      if (hoverData && !isAnalyzing) seekTo(hoverData.time);
                     }}
                   >
                     <defs>
@@ -540,7 +541,7 @@ export default function DeepfakeScanner() {
                         <stop offset="100%" stopColor={result?.riskLevel === "Critical" ? "#ef4444" : "#06b6d4"} stopOpacity="0" />
                       </linearGradient>
                     </defs>
-                    
+
                     {/* The scanning line (only shows during analysis) */}
                     {isAnalyzing && (
                       <rect className="cyber-scanner-media h-full w-[2px] opacity-50 pointer-events-none" />
