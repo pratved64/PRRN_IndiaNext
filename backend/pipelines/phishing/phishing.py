@@ -82,6 +82,14 @@ def get_word_attributions(attributions: torch.Tensor, tokens: list[str], tokeniz
     current_word = ""
     current_score = 0.0
 
+    # Stop words to filter out from explanations (keep the list manageable)
+    STOP_WORDS = {
+        "a", "an", "the", "is", "are", "was", "were", "be", "been", "being",
+        "in", "on", "at", "to", "for", "of", "by", "with", "and", "or", "but",
+        "this", "that", "it", "they", "we", "he", "she", "you", "my", "your",
+        "is", "it", "as", "if"
+    }
+
     # Aggregate scores for subword tokens (##)
     for token, score in zip(tokens, token_attributions.tolist()):
         # Skip special tokens typically
@@ -94,13 +102,20 @@ def get_word_attributions(attributions: torch.Tensor, tokens: list[str], tokeniz
         else:
             # Save the previous word if it exists
             if current_word:
-                word_scores.append({"word": current_word, "score": current_score})
+                # Filter: skip stopwords, single char punctuation, or very low impact noise
+                w_lower = current_word.lower()
+                is_punc = all(not c.isalnum() for c in current_word)
+                if w_lower not in STOP_WORDS and not is_punc and abs(current_score) > 0.01:
+                    word_scores.append({"word": current_word, "score": current_score})
             current_word = token
             current_score = score
             
     # Add the last word
     if current_word:
-        word_scores.append({"word": current_word, "score": current_score})
+        w_lower = current_word.lower()
+        is_punc = all(not c.isalnum() for c in current_word)
+        if w_lower not in STOP_WORDS and not is_punc and abs(current_score) > 0.01:
+            word_scores.append({"word": current_word, "score": current_score})
         
     # Sort by absolute impact (highest positive or negative influence on 'phishing' classification)
     word_scores.sort(key=lambda x: abs(x["score"]), reverse=True)

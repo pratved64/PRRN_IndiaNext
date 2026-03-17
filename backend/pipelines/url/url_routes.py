@@ -74,7 +74,11 @@ async def analyze_url_endpoint(request_data: UrlRequest, request: Request):
     # Step 2: Run inference on the resolved URL (offloaded to thread pool per RULES.md)
     try:
         clean_text = _preprocess_url_for_model(resolved_url)
-        fn = partial(analyze_email, clean_text, model, tokenizer)
+        # Prepend a context prompt to help the DistilBERT model (trained on email text)
+        # understand that this specific token sequence is a URL to be analyzed.
+        context_text = f"The following URL needs to be checked for phishing: {clean_text}"
+        
+        fn = partial(analyze_email, context_text, model, tokenizer)
         result = await anyio.to_thread.run_sync(fn)
         risk_score = result["risk_score"]
         return UrlResponse(

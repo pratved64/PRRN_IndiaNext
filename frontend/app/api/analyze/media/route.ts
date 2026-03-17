@@ -1,43 +1,40 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from "next/server";
 
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8001';
+// Prefer explicit BACKEND_URL, fall back to the same base used client-side.
+const BACKEND_URL =
+  process.env.BACKEND_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  "http://localhost:8000";
 
+// Forward the raw multipart request to the FastAPI backend to avoid losing the file.
 export async function POST(request: NextRequest) {
   try {
-    const formData = await request.formData();
-    const file = formData.get('file') as File;
+    const fetchInit: RequestInit = {
+      method: "POST",
+      headers: {
+        // preserve content-type boundary so the backend sees the file
+        "content-type": request.headers.get("content-type") || "",
+      },
+      body: request.body,
+    };
+    // duplex:"half" is required by Node 18+ fetch for streaming bodies but is
+    // not yet in TypeScript's RequestInit definition — use Object.assign to avoid TS error.
+    const backendResponse = await fetch(
+      `${BACKEND_URL}/api/analyze/media`,
+      Object.assign(fetchInit, { duplex: "half" })
+    );
 
-    if (!file) {
-      return NextResponse.json(
-        { error: 'File is required' },
-        { status: 400 }
-      );
-    }
+    const contentType = backendResponse.headers.get("content-type") || "application/json";
+    const text = await backendResponse.text();
 
-    // Create new FormData to forward to backend
-    const backendFormData = new FormData();
-    backendFormData.append('file', file);
-
-    // Forward to backend
-    const response = await fetch(`${BACKEND_URL}/api/analyze/media`, {
-      method: 'POST',
-      body: backendFormData,
+    return new NextResponse(text, {
+      status: backendResponse.status,
+      headers: { "content-type": contentType },
     });
-
-    if (!response.ok) {
-      const errorData = await response.text();
-      return NextResponse.json(
-        { error: `Backend error: ${errorData}` },
-        { status: response.status }
-      );
-    }
-
-    const data = await response.json();
-    return NextResponse.json(data);
   } catch (error) {
-    console.error('Media analysis API error:', error);
+    console.error("Media analysis API error:", error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }

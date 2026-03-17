@@ -2,16 +2,11 @@
 
 import React from "react";
 
-interface HighlightedWord {
-  word: string;
-  score: number;
-}
-
 interface ThreatResult {
   threatType: string;
   riskLevel: "None" | "Low" | "Medium" | "High" | "Critical";
   confidence: number;
-  explanations: HighlightedWord[]; // ← now carries full {word, score} objects
+  explanations: string[];
   recommendation: string;
   heatmapBase64?: string;
   attentionMap?: number[];
@@ -60,9 +55,6 @@ export default function ExplainabilityCard({ result }: { result: ThreatResult })
 
   const styles = getAlertStyles(result.riskLevel);
 
-  // Sort descending by score so highest-influence words appear first
-  const sortedExplanations = [...result.explanations].sort((a, b) => b.score - a.score);
-
   return (
     <div className={`mt-8 border backdrop-blur-sm rounded-lg overflow-hidden transition-all duration-300 ${styles.wrapper}`}>
       
@@ -89,36 +81,18 @@ export default function ExplainabilityCard({ result }: { result: ThreatResult })
           Diagnostic Logs // Why flagged
         </h4>
 
-        {sortedExplanations.length === 0 ? (
+        {result.explanations.length === 0 ? (
           <p className="text-green-400 font-mono text-sm mb-8">
             No suspicious indicators detected in the payload.
           </p>
         ) : (
           <ul className="space-y-3 mb-8 font-mono text-sm">
-            {sortedExplanations.map((item, index) => {
-              // score is 0–1 from backend; render as a percentage bar
-              const pct = Math.round(item.score * 100);
-              return (
-                <li key={index} className="flex items-center gap-4">
-                  {/* Index tag */}
-                  <span className="opacity-40 shrink-0 w-8">{`[${String(index + 1).padStart(2, "0")}]`}</span>
-
-                  {/* Word label */}
-                  <span className="flex-1 truncate">{item.word}</span>
-
-                  {/* Score bar */}
-                  <div className="flex items-center gap-2 shrink-0">
-                    <div className="w-24 h-1.5 bg-white/10 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full ${styles.scoreBar}`}
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
-                    <span className="text-[10px] opacity-50 w-8 text-right">{pct}%</span>
-                  </div>
-                </li>
-              );
-            })}
+            {result.explanations.map((msg, index) => (
+              <li key={index} className="flex items-start gap-3">
+                <span className="opacity-40 shrink-0 w-8 pt-0.5">{`[${String(index + 1).padStart(2, "0")}]`}</span>
+                <span className="flex-1 text-gray-200 leading-relaxed">{msg}</span>
+              </li>
+            ))}
           </ul>
         )}
 
